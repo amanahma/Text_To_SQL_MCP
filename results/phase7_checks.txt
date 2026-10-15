@@ -425,3 +425,129 @@ ACCOUNTING (every number adds up; no "ignored module" category)
   98 -> 90 slow). The earlier "537 = 452 + 85" figure was for the interim CI setting
   BIRD_DBS=queryguard_demo (1 db); the CI unit job now uses the 11 names, so its collection
   is the full 550.
+
+================================================================================
+SECTION 3 - READ-ONLY FOLLOW-UP (2026-10-15 23:10 IST): RUN_LOG IST audit,
+no_sql/final_turn_failed definitions, and the 6 final_turn_failed rows.
+errors_key.csv was NOT opened. No file changed except this append.
+================================================================================
+
+------------------------------------------------------------------------------
+1. STEP E - RUN_LOG "IST" timestamp audit (read-only; no RUN_LOG line edited)
+------------------------------------------------------------------------------
+This box's Git Bash `date` returns UTC, but the Windows OS/filesystem clock is IST:
+`stat` prints mtimes with a +0530 offset. So file mtimes are authoritative IST and a
+line can be checked by comparing its claimed IST to the file's mtime (in IST).
+
+Every RUN_LOG line whose time is labelled IST, with a verdict:
+
+  line  claimed (IST)             verdict / evidence (mtime in IST)
+  3     2026-10-09 11:46          INCONCLUSIVE (no file); consistent with the 11:46 fingerprint.
+  4     2026-10-09 11:46          MATCHES - fingerprint_6b_before.json mtime 2026-10-09 11:46.
+  5     2026-10-09 11:46          MATCHES - same file, 2026-10-09 11:46.
+  6     2026-10-09 11:47 (START)  INCONCLUSIVE - baseline_6b.jsonl mtime is the LAST append
+                                  (2026-10-12 00:52 IST), so the START time is not recoverable.
+  7     2026-10-09 13:47 (STOP)   MATCHES (within min) - baseline_6b.errors.jsonl mtime
+                                  2026-10-09 13:49 IST (q32 error written just after the stop).
+  8     2026-10-09 13:48 (RESUME) INCONCLUSIVE (no distinct file).
+  9     2026-10-09 14:00 (STOP)   INCONCLUSIVE (no file; a rate-limit exit writes no artifact).
+  10    2026-10-09 17:18 (STOP)   INCONCLUSIVE (no file).
+  11    2026-10-10 11:19 (fix#1)  INCONCLUSIVE - eval/harness.py mtime 2026-10-11 00:24 IST was
+                                  OVERWRITTEN by fix #2, so fix #1's time cannot be confirmed.
+  12    2026-10-11 00:22 (fix#2)  MATCHES (within 2 min) - eval/harness.py mtime 2026-10-11 00:24 IST.
+  13    2026-10-14 (no time)      n/a (date only).
+  14    2026-10-14 10:56          MATCHES (approx) - attacks_reader_pii_6b.json mtime
+                                  2026-10-14 10:33 IST; the note (10:56) is ~23 min later.
+  23    2026-10-14 ~11:35-11:57   CONSISTENT - attacks_*_6b.json mtimes ~10:33 IST on 2026-10-14.
+  32    2026-10-15 01:16          MATCHES EXACTLY - errors_blind.csv / errors_key.csv mtime
+                                  2026-10-15 01:16 IST.
+  33    2026-10-15 22:14          MATCHES - tests/test_harness.py mtime 2026-10-15 22:07 IST
+                                  (the slow-marker edits); log line written just after.
+
+VERDICT: no IST-labelled line that CAN be checked against a file mtime looks like UTC
+mislabelled as IST - every confirmable one matches real IST. (Line 33 had originally been
+UTC-mislabelled as "16:44 IST"; it was corrected earlier this session to "22:14 IST" and now
+matches the ~22:07 IST edit mtimes.) The inconclusive lines are not contradicted by any mtime.
+No RUN_LOG line was edited.
+
+------------------------------------------------------------------------------
+2. A4 FOLLOW-UP - how each file defines "no_sql" / "final_turn_failed", and why
+   errors_blind has no_sql 14 + final_turn_failed 6 = 20 while the report says no_sql = 16
+------------------------------------------------------------------------------
+eval/export_errors.py - no reclassification; the `result` column is the RAW run-file value.
+  line 110:  for r in recs:                      # iterates ONLY run-file records
+  line 114:      if r.get("correct") is True:  # keep only wrong or no_sql
+  lines 122-126:
+      pred_sql = r.get("final_sql")
+      if pred_sql:
+          pcols, pred, perr = await run_sql(q["db_id"], pred_sql)
+      else:
+          pcols, pred, perr = 0, [], "no_sql"       # "no_sql" here is the pred_error fallback
+  line 136:      "result": r.get("result"),          # result column = raw, verbatim
+  -> "final_turn_failed" never appears in this file (grep count 0); it is passed through
+     unchanged as the raw result value. The only "no_sql" literal is the pred_error fallback.
+
+eval/analyze_phase6.py - counts no_sql strictly, and SYNTHESIZES no_sql for escaped 400s.
+  lines 303-304:
+      def is_no_sql(r: dict) -> bool:
+          return r.get("result") == "no_sql"         # final_turn_failed is NOT no_sql
+  lines 44-45 (preregistered rule comment):
+      # Preregistered rule: such a question is scored no_sql in that condition; a later
+      # resume record for the same id is ignored.
+  lines 142-168 (apply_tool_use_failed_rule): an in-sample id whose 400 tool_use_failed is
+      logged to the sibling *.errors.jsonl is REPLACED with a synthetic record
+      {"result": "no_sql", "correct": False, ...}; "Any existing run-file record for such an
+      id is dropped (the resume record is ignored)".
+  -> "final_turn_failed" never appears in this file either (grep count 0): is_no_sql() is
+     result=="no_sql" only, so a final_turn_failed record is simply "not no_sql" (it lands in
+     the answered/wrong bucket, in the answered-only denominator).
+
+EXACT RECONCILIATION (verified against the run files; errors_key.csv NOT used - run files
+carry the condition by filename):
+  baseline_6b.jsonl (150 in-sample): answered 144, no_sql 6 (qids 479,573,1130,1147,1149,1205),
+      final_turn_failed 0; baseline_6b.errors.jsonl ids = [32, 32].
+  main_6b.jsonl (150 in-sample): answered 136, no_sql 8 (qids 244,537,598,865,1079,1110,1410,
+      1435), final_turn_failed 6 (qids 26,45,94,186,480,565); main_6b.errors.jsonl ids=[407,1405].
+
+  errors_blind.csv (raw result passthrough):
+      no_sql            = 6 (baseline) + 8 (main) = 14   [all 14 have empty predicted_sql]
+      final_turn_failed = 0 (baseline) + 6 (main) = 6
+      "20 no-SQL-produced rows" = 14 + 6 = 20.
+
+  report (analyze_phase6) no_sql = baseline 7 + main 9 = 16, where:
+      baseline 7 = 6 organic no_sql + q32   (tool_use_failed 400 -> synthetic no_sql; its only
+                   run-file record is a later answered/wrong resume, which the rule DROPS)
+      main 9     = 8 organic no_sql + q407  (tool_use_failed 400 -> synthetic no_sql; likewise)
+      i.e. 16 = 14 organic + 2 synthesized (q32, q407).
+
+  WHY THEY DIFFER (code, not data error):
+    (a) errors_blind splits raw result values, so its "20" counts the 6 final_turn_failed as a
+        separate bucket; the report's no_sql count (is_no_sql) EXCLUDES final_turn_failed.  -6
+    (b) The report ADDS 2 synthesized no_sql (q32 baseline, q407 main) from the escaped 400s in
+        *.errors.jsonl. export_errors reads only run-file records, so those two ids appear in
+        errors_blind as their answered/wrong resume rows (confirmed: q32 and q407 each show as
+        result="answered" in errors_blind), NOT as no_sql and NOT synthesized.          +2
+    So: 20 = 14 + 6 (errors_blind, raw)  vs  16 = 14 + 2 (report, reclassified).
+    NOTE on q1405: main_6b.errors.jsonl also lists 1405 (output_parse_failed, not a
+    tool_use_failed sign), but its run-file record is answered/wrong and the later record was
+    also wrong, so the no_sql count is unchanged by it (report main no_sql stays 9, = 8 + q407).
+    The report's "output_parse_failed -> no_sql: main 1 [q1405]" line documents the first-attempt
+    disposition; it does not add to the no_sql total.
+
+------------------------------------------------------------------------------
+3. The 6 final_turn_failed rows (all from main; blind_id, predicted_sql, LLM label)
+------------------------------------------------------------------------------
+  blind_id      qid   predicted_sql   LLM label        reason
+  9f0ec3d480ae  45    EMPTY (len 0)   A_truly_wrong    no SQL produced (final-turn failure)
+  2d4bb1fbbd90  94    EMPTY (len 0)   A_truly_wrong    no SQL produced (final-turn failure)
+  e05502d13635  565   EMPTY (len 0)   A_truly_wrong    no SQL produced (final-turn failure)
+  17defd174a7a  480   EMPTY (len 0)   A_truly_wrong    no SQL produced (final-turn failure)
+  36eed31f9abe  26    EMPTY (len 0)   A_truly_wrong    no SQL produced (final-turn failure)
+  36f35bdde7a6  186   EMPTY (len 0)   A_truly_wrong    no SQL produced (final-turn failure)
+
+  FLAG CHECK: "any row with a NON-EMPTY predicted_sql labelled A only because of its result
+  value" -> NONE. All 6 final_turn_failed rows have an empty predicted_sql (len 0), so the
+  A_truly_wrong label reflects that no SQL was produced, not merely the result string. (For
+  completeness, all 14 result==no_sql rows also have empty predicted_sql.)
+
+CORRECTION: the earlier line saying astral-sh/setup-uv's newest major is v10.3.0 was wrong. @v10 does not exist (the GitHub Actions run failed with 'unable to find version v10'). Pinned to @v7 by the owner.
