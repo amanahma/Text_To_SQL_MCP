@@ -204,6 +204,7 @@ async def test_scoring_not_implemented_is_null(monkeypatch: pytest.MonkeyPatch) 
 
 
 # --- rescore (step 3) -------------------------------------------------------- #
+@pytest.mark.slow
 async def test_rescore_updates_correct(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     monkeypatch.setattr(scoring, "is_correct", lambda pred, gold: True)
     # Two records with deliberately stale verdicts; question_ids must exist in the
@@ -257,6 +258,7 @@ async def test_non_bool_scoring_is_scoring_error(monkeypatch: pytest.MonkeyPatch
     assert record["gold"]["status"] == "ok"
 
 
+@pytest.mark.slow
 async def test_run_eval_live_path_writes_scoring_error_record(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
@@ -285,6 +287,7 @@ async def test_run_eval_live_path_writes_scoring_error_record(
     assert "ValueError" in records[0]["scoring_error"]
 
 
+@pytest.mark.slow
 async def test_scoring_exception_is_scoring_error_and_written(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
@@ -318,6 +321,7 @@ async def test_scoring_exception_is_scoring_error_and_written(
     assert "ValueError" in rescored[0]["scoring_error"]
 
 
+@pytest.mark.slow
 async def test_rescore_recovers_scoring_error(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     monkeypatch.setattr(scoring, "is_correct", lambda pred, gold: True)
     run_path = tmp_path / "baseline_test_run.jsonl"
@@ -395,6 +399,7 @@ async def test_normal_sql_error_recorded_as_false(monkeypatch: pytest.MonkeyPatc
     assert record["correct"] is False
 
 
+@pytest.mark.slow
 async def test_run_eval_stops_on_outage_and_writes_nothing(
     monkeypatch: pytest.MonkeyPatch, tmp_path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -423,6 +428,7 @@ async def test_run_eval_stops_on_outage_and_writes_nothing(
     assert "--resume" in err
 
 
+@pytest.mark.slow
 async def test_rescore_stops_on_outage(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     monkeypatch.setattr(scoring, "is_correct", lambda pred, gold: True)
     run_path = tmp_path / "run.jsonl"
@@ -669,6 +675,7 @@ async def test_groq_429_reconstructed_q207_tpm_waits(monkeypatch: pytest.MonkeyP
     assert record["final_sql"] == "SELECT 1"
 
 
+@pytest.mark.slow
 async def test_run_eval_groq_daily_limit_stops_and_writes_nothing(
     monkeypatch: pytest.MonkeyPatch, tmp_path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -830,6 +837,7 @@ def _sample50_ids() -> set[int]:
     return set(harness.load_sample(harness.PROJECT_ROOT / "eval" / "sample_50.json"))
 
 
+@pytest.mark.slow
 def test_dev_sample_shape_no_overlap_and_deterministic() -> None:
     questions = harness.load_questions()
     by_id = {q["question_id"]: q for q in questions}
@@ -846,6 +854,7 @@ def test_dev_sample_shape_no_overlap_and_deterministic() -> None:
     assert dict(split) == {"simple": 3, "moderate": 5, "challenging": 2}
 
 
+@pytest.mark.slow
 def test_create_dev_sample_never_overwrites(tmp_path) -> None:
     questions = harness.load_questions()
     exclude = _sample50_ids()
@@ -862,6 +871,7 @@ def test_load_sample_missing_errors(tmp_path) -> None:
         harness.load_sample(tmp_path / "nope.json")
 
 
+@pytest.mark.slow
 async def test_run_eval_never_creates_missing_sample(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
@@ -905,6 +915,7 @@ async def test_record_includes_prompt_version(monkeypatch: pytest.MonkeyPatch) -
     assert record["prompt_version"] == harness.prompt_version()
 
 
+@pytest.mark.slow
 async def test_run_eval_filename_includes_prompt_version(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
@@ -936,6 +947,7 @@ async def _run_eval_resume(monkeypatch, tmp_path, resume_path):
     await run_eval(condition="main", sample_path=sample, resume=str(resume_path), dry_run=True)
 
 
+@pytest.mark.slow
 async def test_resume_refuses_different_prompt_version(
     monkeypatch: pytest.MonkeyPatch, tmp_path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -944,6 +956,7 @@ async def test_resume_refuses_different_prompt_version(
         await _run_eval_resume(monkeypatch, tmp_path, resume_path)
 
 
+@pytest.mark.slow
 async def test_resume_refuses_missing_prompt_version(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
@@ -1075,6 +1088,7 @@ def _run_file_and_errors(tmp_path):
     return run_files, err_files
 
 
+@pytest.mark.slow
 async def test_unexpected_error_recorded_run_continues_nonzero_exit(
     monkeypatch: pytest.MonkeyPatch, tmp_path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -1106,6 +1120,7 @@ async def test_unexpected_error_recorded_run_continues_nonzero_exit(
     assert "--resume" in err_out
 
 
+@pytest.mark.slow
 async def test_error_summary_printed_even_when_run_stopped(
     monkeypatch: pytest.MonkeyPatch, tmp_path, capsys: pytest.CaptureFixture[str]
 ) -> None:

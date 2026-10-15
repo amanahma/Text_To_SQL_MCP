@@ -24,6 +24,7 @@ async def test_list_databases_returns_all_configured() -> None:
     assert sorted(result.data) == sorted(expected)
 
 
+@pytest.mark.slow
 async def test_list_tables_returns_rich_entries() -> None:
     server = build_server()
     async with Client(server) as client:
@@ -83,7 +84,6 @@ async def test_execute_query_success_returns_structured_rows() -> None:
     assert "elapsed_ms" in data and "warnings" in data
 
 
-@pytest.mark.slow
 async def test_execute_query_blocked_is_tool_error() -> None:
     server = build_server()
     async with Client(server) as client:

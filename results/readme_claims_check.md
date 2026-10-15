@@ -104,7 +104,7 @@ code; design facts cite `eval/PREREGISTRATION.md`.
 | no pre-run code freeze; hashes and git created after the runs | `results/RUN_LOG.md` (retrospective); `results/CHECKSUMS_6B.txt` (header); `results/CODE_HASHES_PHASE7_START.txt` (header) |
 | classifier partial-match false alarms on discovery tools | `results/phase6_report_6b.md` §6; `results/attack_summary_6b.md` §(d) |
 | stdio only: no authentication, no hosted deploy | `src/queryguard/server.py` (stdio; no auth in code); `docs/CLIENT_CONFIG.md` |
-| CI runs 511 tests + demo integration; 39 BIRD tests and the dry run are local only | `.github/workflows/ci.yml`; `results/phase7_checks.txt` (511 passed; 39 slow); `results/phase7_part2_checks.md` §0.1 |
+| CI's unit job runs 460 tests (no DB; BIRD_DBS set to the 11 db_id names only) + demo integration; DB/BIRD tests (whole modules test_reader_role/test_reader_revokes/test_allowlist_catalog/test_bird_data/test_safety_gold/test_schema_tools + specific tests in test_baseline_server/test_executor/test_harness/test_main_server) are marked `slow` and run in integration or locally, as does the dry run | `.github/workflows/ci.yml` (unit job `pytest -m "not slow"`, `BIRD_DBS` = 11 names); `tests/*.py` (slow markers); `results/phase7_checks.txt` (marker-refinement clean-copy run: 460 passed, 90 deselected) |
 
 ## Reproduce / Repo map / Licence
 
@@ -131,7 +131,7 @@ code; design facts cite `eval/PREREGISTRATION.md`.
 | masking's effect on accuracy was not measured: no sample_150 question has the pii_masked tag (0 removed) | `results/phase6_report_6b.md` §2 (tag-exclusion table, pii_masked 0 removed) + §6 (new limitation) |
 | two harness fixes during the baseline run (after 16 records): error handling + stop logic, not scoring | `results/RUN_LOG.md` (2026-10-10, 2026-10-11); `results/phase6_report_6b.md` §5 |
 | CI builds the Docker image but does not run it; the image was tested locally only | `.github/workflows/ci.yml` (docker-build job: `docker build`, no run); `results/phase7_checks.txt` (local demo run) |
-| test count: 550 total, 511 in CI | `results/phase7_checks.txt` (`550 tests collected`; `511 passed, 39 deselected`); `results/phase7_part2_checks.md` §0.1 |
+| test count: 550 total (all 11 BIRD db_id names) = 460 in CI unit job + 90 `slow`; the CI unit job and the full environment both set BIRD_DBS to the 11 names, so both collect 550 (full env runs all 550 with the databases up; CI runs the 460 non-slow and deselects the 90) | `results/phase7_checks.txt` (marker-refinement accounting: `550 tests collected` = 460 + 90; clean-copy run `460 passed, 90 deselected` with BIRD_DBS = 11 names and no database) |
 
 ## Part 4 — new / changed README + DEMO_SCRIPT sentences (after review)
 
@@ -149,7 +149,7 @@ code; design facts cite `eval/PREREGISTRATION.md`.
 | Reproduce: setup scripts in path form (not `-m`) because of a bare `_dockerutil` import; eval commands in `-m` form | `results/phase7_part4_checks.md` §0e (`-m scripts.*` → ModuleNotFoundError; `-m eval.*` works); `CLAUDE.md` (eval/inspect.py shadow) |
 | Reproduce: use new output files `results/baseline_repro.jsonl` / `results/main_repro.jsonl` (because `--resume` on the committed `_6b` files skips all 150) | `eval/PREREGISTRATION.md` / `eval/harness.py` (`--resume` skips done ids) |
 | Reproduce: approximate prompt-token need (derived = 150 × report §2 per-question mean): baseline ≈ 150 × 3894.4 = 584,160; main ≈ 150 × 14404.3 = 2,160,645 | `results/phase6_report_6b.md` §2 (mean prompt tokens baseline 3894.4, main 14404.3); product is derived and labelled |
-| Reproduce: the full pytest suite needs the BIRD databases (39 slow tests connect); CI runs the 511 non-slow | `tests/conftest.py` (`reader_conn` connects); `pyproject.toml` (`slow` marker); `results/phase7_checks.txt` (511 non-slow pass) |
+| Reproduce: the full pytest suite needs the BIRD databases (every test that connects to a DB or reads the BIRD dataset is marked `slow`); CI's unit job runs `pytest -m "not slow"`, the 460 that need neither DB nor BIRD data | `tests/conftest.py` (`reader_conn` connects); `pyproject.toml` (`slow` marker); `tests/*.py` (slow markers); `.github/workflows/ci.yml` (`-m "not slow"`); `results/phase7_checks.txt` (460 passed) |
 | DEMO_SCRIPT on-screen note: demo uses a direct MCP client (e.g. MCP Inspector), not an AI assistant; shows the server blocking, not an assistant declining | design choice; `scripts/smoke_mcp.py` (direct client exercising the same calls) |
 | DEMO_SCRIPT (a): "common PII columns are masked (best-effort)" (was "PII is masked") | `src/queryguard/pii.py`; `CLAUDE.md` (masking is best-effort) |
 | DEMO_SCRIPT (c): MCP Inspector launch command; marked "not tested here" (GUI); same direct calls verified by smoke_mcp | `docs/CLIENT_CONFIG.md` (stdio launch); `scripts/smoke_mcp.py` |

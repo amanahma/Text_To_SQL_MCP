@@ -28,7 +28,11 @@ import pytest
 from queryguard.function_allowlist import ALLOWED_FUNCTIONS
 
 # Check against california_schools specifically (pg_proc is identical on every db).
-pytestmark = pytest.mark.parametrize("reader_conn", ["california_schools"], indirect=True)
+# Every test here reads pg_proc over a live connection, so the module is marked slow.
+pytestmark = [
+    pytest.mark.slow,
+    pytest.mark.parametrize("reader_conn", ["california_schools"], indirect=True),
+]
 
 # Allow-listed names with a volatile (provolatile='v') signature in PG16. Each is
 # volatile only because its result varies per call — none has a side effect (checked

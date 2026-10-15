@@ -13,7 +13,11 @@ import pytest
 from conftest import BIRD_DBS
 
 # Check against (at least) two databases, to prove the revoke was applied per db.
-pytestmark = pytest.mark.parametrize("reader_conn", BIRD_DBS[:2], indirect=True)
+# Every test here needs the live database, so the whole module is marked slow.
+pytestmark = [
+    pytest.mark.slow,
+    pytest.mark.parametrize("reader_conn", BIRD_DBS[:2], indirect=True),
+]
 
 # A call to each revoked function. Each must raise a permission error for qg_reader.
 REVOKED_CALLS: list[tuple[str, str]] = [

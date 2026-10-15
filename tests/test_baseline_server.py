@@ -33,6 +33,7 @@ async def _superhero_tables_and_columns() -> dict[str, list[str]]:
     return schema
 
 
+@pytest.mark.slow
 async def test_description_lists_every_table_and_column() -> None:
     schema = await _superhero_tables_and_columns()
     assert schema, "superhero has no tables; is the data loaded?"
@@ -49,6 +50,7 @@ async def test_description_lists_every_table_and_column() -> None:
             assert column in description, f"missing column {table}.{column}"
 
 
+@pytest.mark.slow
 async def test_run_sql_caps_rows_at_100() -> None:
     server = await build_baseline_server(DB_ID)
     async with Client(server) as client:
@@ -59,6 +61,7 @@ async def test_run_sql_caps_rows_at_100() -> None:
     assert len(result.data["rows"]) == ROW_CAP
 
 
+@pytest.mark.slow
 async def test_run_sql_sets_5s_statement_timeout() -> None:
     server = await build_baseline_server(DB_ID)
     async with Client(server) as client:
@@ -70,6 +73,7 @@ async def test_run_sql_sets_5s_statement_timeout() -> None:
     assert result.data["rows"][0][0] in ("5s", "5000ms")
 
 
+@pytest.mark.slow
 async def test_write_attempt_returns_tool_error() -> None:
     server = await build_baseline_server(DB_ID)
     async with Client(server) as client:

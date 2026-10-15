@@ -228,3 +228,200 @@ NOTES
   check was loosened; all passed.
 - Strengthened smoke_mcp: checks 4/5 now require the check_sql rule id (R4 for DROP, R6 for
   pg_ls_dir) from the error text, and print it. Both matched; no "no rule id" stop occurred.
+
+================================================================================
+CI FIX — unit job "exit code 2" (2026-10-15)
+No git except read-only `git ls-files`. No Groq. .env never printed.
+================================================================================
+
+REPRODUCTION (clean temp copy of only `git ls-files`, no data/.env/.venv/transcripts)
+$ git ls-files | wc -l            -> 160 tracked files (data/ NOT tracked)
+Built temp copy with 160 files (data present: no; .env present: no).
+
+$ uv sync --frozen                 -> SYNC=0
+$ uv run ruff check .              -> All checks passed!   (0)
+$ uv run ruff format --check .     -> 81 files already formatted   (0)
+$ BIRD_DBS=queryguard_demo uv run pytest -m "not slow" -q
+  -> PYTEST=2 (collection errors). Exact cause:
+     ERROR tests/test_harness.py / test_inspect.py / test_run_attacks.py / test_safety_gold.py
+     E   ModuleNotFoundError: No module named 'anthropic'
+  i.e. eval/harness.py imports `anthropic`, which is in the `eval` dependency group;
+  `uv sync --frozen` installs main+dev only, so the 4 eval-backed modules fail to import
+  -> pytest exit 2. (Locally it had passed because the dev machine's venv already had the
+  eval group installed.)
+
+AFTER INSTALLING THE EVAL GROUP (to let the eval-backed modules import; no API is called)
+$ uv sync --frozen --group eval    -> SYNC=0 (adds anthropic, openai, ...)
+$ BIRD_DBS=queryguard_demo uv run pytest -m "not slow" -q
+  -> PYTEST=1 : 452 passed, 29 failed, 39 deselected, 17 errors.
+  All 46 failures/errors need a live DB or the BIRD dataset and are NOT marked `slow`:
+    - UnknownDatabaseError: Unknown database 'california_schools' ... Available: queryguard_demo
+      (tests hard-code BIRD db_ids; BIRD_DBS=queryguard_demo has only the demo db)
+    - FileNotFoundError: .../data/mini_dev_postgresql.json  (load_questions needs BIRD data)
+    - AssertionError: assert 1 == 11  (test_main_server expects all 11 BIRD db_ids)
+  Fully-DB modules (0 passing tests): test_reader_role, test_reader_revokes,
+    test_allowlist_catalog, test_bird_data, test_safety_gold.
+  Mixed modules (DB-free tests pass; only the DB/BIRD tests fail): test_baseline_server (1 pass/4 fail),
+    test_executor (8/6), test_harness (44/15), test_main_server (3/2).
+
+FIX (ci.yml only): install the eval group; --ignore the 5 fully-DB modules; --deselect the
+27 DB/BIRD tests in the 4 mixed modules. No lint rule loosened; no DB-free test skipped.
+
+RE-RUN WITH THE FIXED COMMAND (clean copy)
+$ BIRD_DBS=queryguard_demo uv run pytest -m "not slow" -q \
+    --ignore=tests/test_reader_role.py --ignore=tests/test_reader_revokes.py \
+    --ignore=tests/test_allowlist_catalog.py --ignore=tests/test_bird_data.py \
+    --ignore=tests/test_safety_gold.py --deselect "<27 DB/BIRD node ids>"
+  -> 452 passed, 65 deselected in 9.07s   PYTEST=0
+NEW CI TEST COUNT: 452 passed / 65 deselected (65 = 39 slow + the explicit deselects
+counted among collected modules; the 5 ignored modules are not collected).
+
+ACTION VERSION LOOKUP (release pages)
+$ WebFetch github.com/actions/checkout/releases/latest     -> v7.0.1 (major v7; node24 since v5)
+$ WebFetch github.com/astral-sh/setup-uv/releases/latest   -> v10.3.0 (major v10; node24 since v7)
+-> pinned actions/checkout@v7 and astral-sh/setup-uv@v10 (newest majors on Node 24).
+
+CI.YML CHANGES
+- unit: uv sync --frozen --group eval; pytest with 5 --ignore + 27 --deselect (452 pass).
+- all jobs: runs-on ubuntu-24.04; actions/checkout@v7; astral-sh/setup-uv@v10 (where used).
+- ruff check + ruff format --check already in the unit job; timeout-minutes: 15 kept.
+
+VALIDATION
+$ python -c "yaml.safe_load(...)"  -> YAML OK; jobs unit/integration/docker-build; all runs-on ubuntu-24.04;
+                                      pytest folds to one line; 27 --deselect, 5 --ignore.
+$ docker run --rm rhysd/actionlint:latest .github/workflows/ci.yml  -> no output, exit 0.
+
+NOT CHANGED: src/, eval/, tests/, pyproject.toml. (The underlying marker gap — several
+DB/BIRD tests are not `@pytest.mark.slow` — is worked around in ci.yml per the allowed fixes;
+the proper fix would be to add `slow`/DB markers in tests/, which was out of scope here.)
+STATED PLAINLY: CI has NOT been run on GitHub from here; validated locally only.
+
+================================================================================
+TEST MARKER FIX (2026-10-15) — replace ci.yml --ignore/--deselect with `slow` markers
+================================================================================
+No git (only read-only `git ls-files`). No Groq/API calls. `.env` never opened.
+Allowed edits only: tests/*.py (slow markers / module pytestmark + `import pytest`
+where missing), .github/workflows/ci.yml, README.md, results/readme_claims_check.md,
+and appends to results/phase7_checks.txt + results/RUN_LOG.md.
+
+WHAT CHANGED (marker lines only — no test logic, expectation, rule, or assertion touched)
+- Marked `slow` exactly the tests ci.yml previously excluded via --ignore/--deselect
+  (they need a live PostgreSQL and/or the BIRD dataset):
+  * module-level pytestmark = slow (merged into the existing parametrize as a list where
+    one was present): test_reader_role.py, test_reader_revokes.py,
+    test_allowlist_catalog.py, test_bird_data.py, test_safety_gold.py  (5 modules)
+  * @pytest.mark.slow on the specific tests inside the otherwise-DB-free modules:
+    test_baseline_server.py (4), test_executor.py (6), test_harness.py (15),
+    test_main_server.py (2)  = 27 functions
+- ci.yml unit job: removed the 5 --ignore and 27 --deselect flags; the test step is now
+  `uv run pytest -m "not slow" -q`. Kept `uv sync --frozen --group eval`,
+  actions/checkout@v7, astral-sh/setup-uv@v10, runs-on: ubuntu-24.04, timeout-minutes: 15.
+
+CLEAN-COPY RUN (git ls-files only -> 160 files; no data/, no .env, no .venv)
+$ uv sync --frozen --group eval
+$ BIRD_DBS=queryguard_demo uv run ruff check .            -> All checks passed!
+$ BIRD_DBS=queryguard_demo uv run ruff format --check .   -> 81 files already formatted
+$ BIRD_DBS=queryguard_demo uv run pytest -m "not slow" -q -> 452 passed, 85 deselected (exit 0)
+  REQUIRED: 452 passed. MATCH.
+
+ACCOUNTING (every number adds up exactly; no "ignored module" category)
+
+  Full BIRD environment (BIRD_DBS = all 11 db_ids; the `reader_conn` parametrize expands
+  BIRD_DBS[:2] to 2 databases):
+      total collected ................... 550
+        run in CI without a database .... 452   (pytest -m "not slow")
+        marked slow (need DB/BIRD) ......  98   (local / integration only)
+      550 = 452 + 98   OK
+
+  CI unit-job environment (BIRD_DBS = queryguard_demo, 1 database; BIRD_DBS[:2] = 1 db):
+      total collected ................... 537
+        run in CI without a database .... 452
+        marked slow (need DB/BIRD) ......  85
+      537 = 452 + 85   OK
+
+  The 452 not-slow (CI) count is identical in both environments — none of those tests is
+  parametrized by BIRD_DBS. Only the slow count changes (98 vs 85): test_reader_role (9)
+  and test_reader_revokes (4) are parametrized across BIRD_DBS[:2], so 11 dbs -> 2 copies
+  each (+13 items) and 1 db -> 1 copy each. Verified with `pytest --collect-only` under
+  both BIRD_DBS settings.
+
+VALIDATION
+$ python -c "yaml.safe_load(...)" -> YAML OK; jobs unit/integration/docker-build;
+                                     unit test step = `uv run pytest -m "not slow" -q`.
+$ docker run --rm rhysd/actionlint:latest .github/workflows/ci.yml -> no output, exit 0.
+
+NOTE for the owner: a few of the now-`slow`-marked tests do not strictly need a LIVE
+database but were in ci.yml's prior exclusion set, so they are marked to keep the CI set
+identical (count 452). The test_executor six (blocked-path / concurrency / connection-
+failure) are fully monkeypatched and need neither DB nor BIRD data; several test_harness
+ones need the BIRD questions file (data/mini_dev_postgresql.json) but not a live DB. A
+finer marker (e.g. a separate `needs_bird_data`) could let the pure-logic ones run in CI;
+kept as `slow` here to preserve the exact 452 and match the prior exclusion set 1:1.
+
+CORRECTION: the Part 1 line "511 DB-free tests pass with NO PostgreSQL running" was wrong.
+The BIRD container was running (docker info: 1 running); 46+ of those tests needed it.
+
+================================================================================
+TEST MARKER REFINEMENT (2026-10-15) — unmark slow tests that pass without a DB/BIRD
+================================================================================
+Same rules: tests/ marker lines only; no git (read-only git ls-files); no Groq; .env
+never opened. Also set the CI unit job's BIRD_DBS to the 11 BIRD db_id names (names only;
+no database started), so the name/count assertions in the non-slow tests match the real
+evaluation.
+
+METHOD
+- Clean copy (git ls-files only -> 160 files; no data/, no .env, no database).
+- Ran every slow-marked test with BIRD_DBS = the 11 names, no DB:
+    $ BIRD_DBS=<11 names> uv run pytest -m "slow" -rA   -> 9 passed, 52 failed, 38 errors
+  (the 38 errors include one test counted as both FAILED and ERROR, so unique slow = 98.)
+- Removed the slow marker from each test that PASSED cleanly; kept it on every
+  fail/error/skip.
+
+UNMARKED (8 clean passers — need neither a live DB nor the BIRD data files):
+    tests/test_executor.py::test_blocked_sql_is_blocked_and_db_untouched
+    tests/test_executor.py::test_blocked_audit_line_has_null_safe_sql
+    tests/test_executor.py::test_same_user_runs_at_most_three_at_once
+    tests/test_executor.py::test_different_users_run_in_parallel
+    tests/test_executor.py::test_connection_failure_is_unavailable
+    tests/test_executor.py::test_audit_never_touches_the_real_log
+    tests/test_main_server.py::test_list_databases_returns_all_configured
+    tests/test_main_server.py::test_execute_query_blocked_is_tool_error
+  (The first six are fully monkeypatched; test_list_databases needs only BIRD_DBS = the 11
+  names, now set in CI; test_execute_query_blocked is blocked by check_sql before any
+  connection.)
+
+KEPT slow despite the test body passing (1):
+    tests/test_schema_tools.py::test_validate_sql_rejects_unsafe
+  Its module (test_schema_tools.py) has a session-scoped autouse fixture
+  `_drop_qg_test_at_session_end` that calls psql at session teardown and needs the DB.
+  Verified: running that one test with no DB -> "1 passed, 1 error" (teardown:
+  `RuntimeError: psql failed ... service "db" is not running`). Unmarking it would make a
+  `-m "not slow"` run error at session teardown, so the whole module stays slow.
+
+VERIFICATION (clean copy, BIRD_DBS = 11 names, no DB)
+    $ uv run ruff check .            -> All checks passed!
+    $ uv run ruff format --check .   -> 81 files already formatted
+    $ uv run pytest -m "not slow" -q -> 460 passed, 90 deselected (exit 0)   [all green]
+    $ uv run pytest -m "slow" -rA    -> only PASSED is test_validate_sql_rejects_unsafe,
+                                        which also ERRORs at module teardown (kept slow)
+YAML: jobs unit/integration/docker-build; unit BIRD_DBS = 11 names; unit step
+      `uv run pytest -m "not slow" -q`.  actionlint: no output, exit 0.
+
+ACCOUNTING (every number adds up; no "ignored module" category)
+  Both the full environment and the CI unit job now set BIRD_DBS to all 11 db_id names, so
+  both COLLECT the same 550 items (collection needs no database):
+
+      total collected ...................... 550
+        run in CI without a database or
+        the BIRD files (pytest -m "not slow") 460
+        need PostgreSQL or the BIRD data
+        files; run locally (marked slow) ...  90
+      550 = 460 + 90   OK
+
+  Full environment = databases up: all 550 run.
+  CI unit job     = no database:   the 460 non-slow run (460 passed); the 90 slow deselected.
+
+  Change from the first marker fix: 8 tests moved from slow -> not-slow (452 -> 460 in CI,
+  98 -> 90 slow). The earlier "537 = 452 + 85" figure was for the interim CI setting
+  BIRD_DBS=queryguard_demo (1 db); the CI unit job now uses the 11 names, so its collection
+  is the full 550.

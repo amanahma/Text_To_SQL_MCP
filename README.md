@@ -326,8 +326,17 @@ Pending: blind labelling of wrong answers (owner).
   values.
 - Tool parameter descriptions are empty in the tool schema.
 - stdio only: no authentication and no hosted deployment.
-- CI runs 511 tests and the demo integration; the 39 BIRD-backed tests and the scripted
-  attack dry run are local only (test count: 550 total, 511 in CI).
+- **460 run in CI without a database or the BIRD files; 90 need PostgreSQL or the BIRD
+  data files and run locally; 550 total with all 11 BIRD databases.** The unit job runs
+  `pytest -m "not slow"`, so the `slow` tests are excluded. Every test that needs a live
+  PostgreSQL or the BIRD dataset is marked `slow` — whole modules `test_reader_role`,
+  `test_reader_revokes`, `test_allowlist_catalog`, `test_bird_data`, `test_safety_gold`,
+  `test_schema_tools`, and the specific DB/BIRD tests inside `test_baseline_server`,
+  `test_executor`, `test_harness`, `test_main_server` (they hard-code BIRD db_ids, read
+  `data/mini_dev_postgresql.json`, or need the live database). Those run against a real
+  database in the integration job or locally; the scripted attack dry run is local only.
+  The unit job sets `BIRD_DBS` to the 11 BIRD db_id names (names only — no database is
+  started) so the name/count assertions match the real evaluation.
 - CI builds the Docker image but does not run it; the image was tested locally only.
 
 ## Reproduce the evaluation
@@ -374,8 +383,9 @@ Analyse (into a fresh report so the committed one is not overwritten):
 uv run python -m eval.analyze_phase6 --baseline results/baseline_repro.jsonl --main results/main_repro.jsonl --sample eval/sample_150.json --tags eval/tags.json --prices eval/prices.json --out results/phase6_report_repro.md
 ```
 
-Tests and lint (the **full** `pytest` suite needs the BIRD databases up; the 39 `slow` tests
-connect to them — CI runs only the 511 non-slow tests):
+Tests and lint (the **full** `pytest` suite needs the BIRD databases up; the tests that
+connect to them or read the BIRD dataset are marked `slow` — CI's unit job runs
+`pytest -m "not slow"`, the 460 tests that need neither a database nor the BIRD dataset):
 
 ```powershell
 uv run pytest -q

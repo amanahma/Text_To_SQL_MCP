@@ -14,6 +14,10 @@ import asyncpg
 import pytest
 from conftest import BIRD_DBS, DATA_DIR, connect_as_reader
 
+# Every test here needs the live databases and the BIRD questions file, so the
+# whole module is marked slow (deselect with -m 'not slow').
+pytestmark = pytest.mark.slow
+
 QUESTIONS_PATH = DATA_DIR / "mini_dev_postgresql.json"
 SMOKE_TEST_COUNT = 25
 SMOKE_TEST_SEED = 1234

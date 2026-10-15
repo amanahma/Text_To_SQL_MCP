@@ -20,6 +20,11 @@ from eval.harness import execute_for_scoring, load_questions
 from eval.scoring import is_correct
 from queryguard.safety import check_sql
 
+# Both tests need the BIRD questions file (load_questions reads
+# data/mini_dev_postgresql.json) and the second also needs the live database, so
+# the whole module is marked slow (deselect with -m 'not slow').
+pytestmark = pytest.mark.slow
+
 MAX_ROWS = 100
 
 

@@ -14,7 +14,11 @@ from conftest import BIRD_DBS
 
 # Run every check in this module against (at least) two different databases, to
 # prove the read-only guarantee holds per database, not just on one.
-pytestmark = pytest.mark.parametrize("reader_conn", BIRD_DBS[:2], indirect=True)
+# Every test here needs the live database, so the whole module is marked slow.
+pytestmark = [
+    pytest.mark.slow,
+    pytest.mark.parametrize("reader_conn", BIRD_DBS[:2], indirect=True),
+]
 
 
 @pytest_asyncio.fixture

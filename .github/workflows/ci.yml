@@ -1,6 +1,7 @@
 # QueryGuard CI. No secrets, no Groq, no eval/accuracy runs.
 #
-# Action versions are pinned to release tags below; for stricter supply-chain
+# Action majors are pinned to the newest releases that run on the Node 24 runtime
+# (actions/checkout v7, astral-sh/setup-uv v10). For stricter supply-chain
 # hardening, repin each to a full commit SHA.
 name: CI
 
@@ -14,36 +15,47 @@ permissions:
   contents: read
 
 jobs:
-  # 1) The existing pytest suite, minus the DB-backed tests. The 39 tests marked
-  #    `slow` need the full BIRD databases (a ~955 MB dump not available in CI);
-  #    the remaining 511 are pure logic and need no PostgreSQL service.
+  # 1) The pytest suite, minus tests that need a live PostgreSQL or the BIRD data.
+  #    The `eval` dependency group is installed so the eval-backed test modules
+  #    import (they pull in anthropic/openai). Tests that need a running database
+  #    or the BIRD dataset (data/mini_dev_postgresql.json, the 11 BIRD db_ids) are
+  #    marked `slow`, so `-m "not slow"` excludes them here; they run against a
+  #    real database in the integration job or locally. 460 tests run here.
   unit:
     name: unit tests (no database)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      # conftest.py reads BIRD_DBS at import time; the non-slow tests never connect.
-      BIRD_DBS: queryguard_demo
+      # conftest.py reads BIRD_DBS at import time; the tests run here never connect.
+      # The 11 real BIRD db_ids are listed by name only (no database is started) so
+      # the name/count assertions in the non-slow tests match the real evaluation.
+      BIRD_DBS: california_schools,card_games,codebase_community,debit_card_specializing,european_football_2,financial,formula_1,student_club,superhero,thrombosis_prediction,toxicology
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           python-version: "3.12"
-      - name: Install dependencies (main + dev groups; no eval group)
-        run: uv sync --frozen
+      - name: Install dependencies (main + dev + eval groups)
+        # The eval group (anthropic, openai) is needed only so the eval-backed test
+        # modules import; no API is called by the non-slow tests.
+        run: uv sync --frozen --group eval
       - name: Lint (ruff)
         run: uv run ruff check .
       - name: Format check (ruff)
         run: uv run ruff format --check .
-      - name: Run non-slow tests
-        # 511 tests expected (39 slow/DB tests deselected).
+      - name: Run tests (no database; DB/BIRD-data tests excluded)
+        # 460 passed expected. The DB/BIRD-data tests are all marked `slow`
+        # (whole modules test_reader_role, test_reader_revokes,
+        # test_allowlist_catalog, test_bird_data, test_safety_gold, test_schema_tools;
+        # plus the specific DB/BIRD tests in test_baseline_server, test_executor,
+        # test_harness and test_main_server), so -m "not slow" excludes them here.
         run: uv run pytest -m "not slow" -q
 
   # 2) Integration: a real PostgreSQL 16, the synthetic demo DB + reused role
   #    setup, then verify_setup and smoke_mcp (the stdio MCP smoke test).
   integration:
     name: integration (demo DB + MCP smoke)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
       db:
@@ -71,8 +83,8 @@ jobs:
       READER_PASSWORD: ci_reader_only
       DEMO_READER_PASSWORD: ci_reader_only
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           python-version: "3.12"
       - name: Install dependencies
@@ -89,9 +101,9 @@ jobs:
   # 3) Build the server image. No push.
   docker-build:
     name: docker build (no push)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build server image
         run: docker build -f Dockerfile -t queryguard:ci .
