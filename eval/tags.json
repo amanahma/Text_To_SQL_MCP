@@ -1,0 +1,67 @@
+{
+  "description": "Per-question tags for Phase 6 analysis. Tags annotate; they NEVER remove a question from any accuracy number. empty_gold measured by running each gold query as qg_reader (0 rows, or only NULLs).",
+  "created": "2026-10-07",
+  "sources": {
+    "pii_masked": "Phase 4A finding (q27,q40,q87,q1346,q1457)",
+    "gold_issue": "every ## Q<id> heading in eval/gold_issues.md",
+    "empty_gold": "measured: gold query returns 0 rows or only NULLs"
+  },
+  "ids_by_tag": {
+    "pii_masked": [
+      27,
+      40,
+      87,
+      1346,
+      1457
+    ],
+    "gold_issue": [
+      37,
+      83,
+      247
+    ],
+    "empty_gold": [
+      563,
+      565,
+      944,
+      1526
+    ]
+  },
+  "tags_by_id": {
+    "27": [
+      "pii_masked"
+    ],
+    "40": [
+      "pii_masked"
+    ],
+    "87": [
+      "pii_masked"
+    ],
+    "1346": [
+      "pii_masked"
+    ],
+    "1457": [
+      "pii_masked"
+    ],
+    "37": [
+      "gold_issue"
+    ],
+    "83": [
+      "gold_issue"
+    ],
+    "247": [
+      "gold_issue"
+    ],
+    "563": [
+      "empty_gold"
+    ],
+    "565": [
+      "empty_gold"
+    ],
+    "944": [
+      "empty_gold"
+    ],
+    "1526": [
+      "empty_gold"
+    ]
+  }
+}

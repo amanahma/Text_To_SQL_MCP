@@ -1,0 +1,230 @@
+PHASE 7 PART 1 — command + output log
+Date: 2026-10-14. Platform: Windows 11 + PowerShell + Docker Desktop (WSL2).
+Every "passed/tested" claim in results/PHASE7_PACKAGING.md maps to a block here.
+"NOT RUN" items are listed at the end.
+
+================================================================================
+DOCKER HEALTH (prerequisite)
+================================================================================
+$ docker info --format '{{.ServerVersion}} / containers={{.Containers}} / running={{.ContainersRunning}}'
+29.8.1 / containers=1 / running=1
+EXIT=0
+-> Docker daemon healthy. Part B and the Docker CI job were NOT skipped.
+
+================================================================================
+PART A
+================================================================================
+A1  $ python -I <gen_hashes.py>   (sha256/size/mtime for src/queryguard, eval, scripts, tests, pyproject.toml, uv.lock)
+    wrote C:\queryguard-mcp\results\CODE_HASHES_PHASE7_START.txt with 78 files
+    (header: "Computed 2026-10-14 after all Phase 6B runs; not a pre-run freeze.";
+     __pycache__ / *.pyc excluded, noted in the file header.)
+    EXIT=0
+
+A2  $ python -I -c "<compare the two write_ddl json files>"
+    byte-identical: True
+    sha a: c89ac1ab86fc216df510df7b237ad91e92e7fece4f2c426780338ef57d3fad59
+    sha b: c89ac1ab86fc216df510df7b237ad91e92e7fece4f2c426780338ef57d3fad59
+    mtimes: attacks_reader_write_ddl.json = 2026-10-14T04:55:53Z,
+            attacks_reader_write_ddl_6b.json = 2026-10-14T06:20:38Z (both size 2381)
+    -> results/write_ddl_file_comparison.md written. The two files are identical in
+       content; only the mtime differs. Neither file was renamed/deleted.
+
+A3  results/readme_numbers.md written. Values copied from results/phase6_report_6b.md,
+    results/attack_dryrun.md, results/attack_summary_6b.md, eval/PREREGISTRATION.md,
+    results/RUN_LOG.md, the fingerprint files, and the test count below. No new
+    statistics computed. One value marked MISSING (a precomputed fingerprint-equality
+    field inside the fingerprint JSON; equality is asserted in prose only).
+
+================================================================================
+TEST COUNT (used in A3 + CI)
+================================================================================
+$ uv run pytest --collect-only -q
+550 tests collected in 17.99s
+EXIT=0
+
+$ uv run pytest -m "not slow" --collect-only -q
+511/550 tests collected (39 deselected) in 14.77s
+EXIT=0
+
+$ uv run pytest -m "not slow" -q -p no:cacheprovider
+511 passed, 39 deselected in 29.29s
+EXIT=0
+-> 511 DB-free tests pass with NO PostgreSQL running. The 39 "slow" tests need the
+   BIRD databases and are the reason CI job 1 runs "-m 'not slow'".
+
+================================================================================
+LIBRARY PROBE (for smoke_mcp transport)
+================================================================================
+$ uv run python -c "import fastmcp; from fastmcp import Client; from fastmcp.client.transports import StdioTransport; ..."
+fastmcp 4.0.10 ; Client OK ; StdioTransport OK
+StdioTransport sig: (self, command: str, args: list[str], env: dict|None=None, cwd: str|None=None, ...)
+EXIT=0
+
+================================================================================
+PART B — DOCKER (build -> up -> setup -> verify -> smoke -> down -v)
+All outputs below are from the FINAL run, against the committed (ruff-formatted) files.
+================================================================================
+B7.1  $ docker compose -p queryguard-demo -f docker-compose.demo.yml build
+      ... Successfully built queryguard ; Image queryguard-demo-server Built
+      BUILD_EXIT=0
+
+B7.2  $ docker compose -p queryguard-demo -f docker-compose.demo.yml up -d
+      Container queryguard-demo-db-1 Healthy
+      Container queryguard-demo-server-1 Started
+      UP_EXIT=0
+
+B7.3  $ DEMO_DB=queryguard_demo DEMO_READER_PASSWORD=*** uv run python -m scripts.setup_demo
+      Setting up demo database 'queryguard_demo' via docker compose (reader role 'qg_reader').
+        schema: ok
+        seed: ok
+        reader role (create_reader.sql): ok
+      Done: demo database 'queryguard_demo' ready with read-only role 'qg_reader'.
+      SETUP_EXIT=0
+
+B7.4  $ docker compose -p queryguard-demo -f docker-compose.demo.yml run --rm -T server python -m scripts.verify_setup
+      Verifying reader role 'qg_reader' on database 'queryguard_demo' at db:5432.
+      [PASS] not superuser: rolsuper = False
+      [PASS] INSERT denied: denied (ReadOnlySQLTransactionError: cannot execute INSERT in a read-only transaction)
+      [PASS] UPDATE denied: denied (ReadOnlySQLTransactionError: cannot execute UPDATE in a read-only transaction)
+      [PASS] DELETE denied: denied (ReadOnlySQLTransactionError: cannot execute DELETE in a read-only transaction)
+      [PASS] CREATE denied: denied (ReadOnlySQLTransactionError: cannot execute CREATE TABLE in a read-only transaction)
+        Revoked-function list (from create_reader.sql): pg_logical_emit_message, txid_current, pg_current_xact_id, setseed
+      [PASS] EXECUTE denied: pg_logical_emit_message: all 2 overload(s) denied [pg_logical_emit_message(boolean, text, bytea); pg_logical_emit_message(boolean, text, text)]
+      [PASS] EXECUTE denied: txid_current: all 1 overload(s) denied [txid_current()]
+      [PASS] EXECUTE denied: pg_current_xact_id: all 1 overload(s) denied [pg_current_xact_id()]
+      [PASS] EXECUTE denied: setseed: all 1 overload(s) denied [setseed(double precision)]
+      [PASS] statement_timeout is a bounded cap: role-level statement_timeout = '30s'.
+             NOTE: create_reader.sql sets the role default to '30s'; the executor narrows this to
+             '5s' per query via SET LOCAL (executor.py), not observable on a bare role connection.
+      RESULT: all checks passed.
+      VERIFY_EXIT=0
+      -> See PHASE7_BLOCKERS.md for the statement_timeout 5s-vs-30s deviation.
+
+B7.5  $ docker compose -p queryguard-demo -f docker-compose.demo.yml run --rm -T server python -m scripts.smoke_mcp
+      Smoke-testing the MCP server (stdio) against database 'queryguard_demo'.
+      INFO Starting MCP server 'queryguard' with transport 'stdio'
+      [PASS] exactly 6 expected tools: ['describe_table', 'execute_query', 'find_columns', 'list_databases', 'list_tables', 'validate_sql']
+      [PASS] list_tables works: 3 tables
+      [PASS] simple SELECT returns rows: 5 rows
+      [PASS] DROP TABLE is blocked: tool error: blocked: R4: only read queries are allowed; this is a DROP statement. Rewrite it as a SELECT.
+      [PASS] pg_ls_dir('.') is blocked: tool error: blocked: R6: function pg_ls_dir is not on the list of allowed read-only functions. Rewrite the query without it.
+      [PASS] generate_series(1,1e9) over cost limit: within_cost_limit=False, estimated_cost=12500000.01, cost_limit=460000
+      [PASS] fake-email column is masked (basic path only; alias/substr/to_jsonb bypasses NOT tested here): email cells = ['***', '***', '***', '***', '***']
+      RESULT: all checks passed.
+      SMOKE_EXIT=0
+
+B7.6  $ docker compose -p queryguard-demo -f docker-compose.demo.yml down -v
+      Volume queryguard-demo_demo_pgdata Removed ; Network queryguard-demo_default Removed
+      DOWN_EXIT=0
+
+================================================================================
+LINT (CLAUDE.md rule 10)
+================================================================================
+$ uv run ruff check .
+All checks passed!           EXIT=0
+$ uv run ruff format --check .
+73 files already formatted   EXIT=0
+(The three new scripts were reformatted by `ruff format` before this check.)
+
+================================================================================
+PART C — CI
+================================================================================
+C2  $ uv run python -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml')); ..."
+    YAML parses OK. jobs: ['unit', 'integration', 'docker-build']
+    permissions: {'contents': 'read'}
+    EXIT=0
+
+C2  $ docker run --rm -v <repo>:/repo --workdir /repo rhysd/actionlint:latest -color .github/workflows/ci.yml
+    (image pulled; no output)
+    ACTIONLINT_EXIT=0
+    -> actionlint reported no problems.
+
+C2  STATE PLAINLY: the CI workflow has NOT RUN on GitHub yet. It is only YAML-validated
+    and actionlint-clean locally. Its jobs (unit / integration / docker-build) have not
+    executed on GitHub Actions.
+
+================================================================================
+NOT RUN
+================================================================================
+- The CI workflow on GitHub Actions: NOT RUN (local YAML + actionlint only). See C2.
+- The full 550-test suite including the 39 `slow` BIRD-backed tests: NOT RUN here. They
+  require the owner's 955 MB BIRD databases + roles, which the demo fixture does not
+  contain. Only the 511 non-slow tests were executed (shown above).
+- The attack dry-run against the demo fixture (C3): NOT RUN — by design it is report-only.
+  See results/PHASE7_PACKAGING.md section C3 for the analysis of which rows need BIRD data.
+- No eval / Groq / accuracy runs were performed (forbidden by the phase rules).
+
+================================================================================
+PHASE 7 PART 3 — re-run after review fixes (2026-10-14)
+All outputs below use the committed (ruff-formatted) files.
+================================================================================
+
+LINT
+$ uv run ruff check .
+All checks passed!           EXIT=0
+$ uv run ruff format --check .
+78 files already formatted   EXIT=0
+(scripts/verify_setup.py and scripts/smoke_mcp.py reformatted by `ruff format` first.)
+
+TESTS
+$ uv run pytest -m "not slow" -q -p no:cacheprovider
+511 passed, 39 deselected in 19.04s
+EXIT=0
+
+CI YAML
+$ docker run --rm -v <repo>:/repo --workdir /repo rhysd/actionlint:latest -color .github/workflows/ci.yml
+(no output)   ACTIONLINT_EXIT=0
+
+DEMO SEQUENCE (build -> up -> setup_demo -> verify_setup -> smoke_mcp -> down -v)
+
+$ docker compose -p queryguard-demo -f docker-compose.demo.yml build
+ Image queryguard-demo-server Built   BUILD_EXIT=0
+
+$ docker compose -p queryguard-demo -f docker-compose.demo.yml up -d
+ Container queryguard-demo-db-1 Healthy ; server Started   UP_EXIT=0
+
+$ DEMO_DB=queryguard_demo DEMO_READER_PASSWORD=*** uv run python -m scripts.setup_demo
+  schema: ok ; seed: ok ; reader role (create_reader.sql): ok   SETUP_EXIT=0
+
+$ docker compose -p queryguard-demo -f docker-compose.demo.yml run --rm -T server python -m scripts.verify_setup
+[PASS] not superuser: rolsuper = False
+[PASS] INSERT denied: denied (ReadOnlySQLTransactionError: cannot execute INSERT in a read-only transaction)
+[PASS] UPDATE denied: denied (ReadOnlySQLTransactionError: cannot execute UPDATE in a read-only transaction)
+[PASS] DELETE denied: denied (ReadOnlySQLTransactionError: cannot execute DELETE in a read-only transaction)
+[PASS] CREATE denied: denied (ReadOnlySQLTransactionError: cannot execute CREATE TABLE in a read-only transaction)
+[PASS] has_table_privilege INSERT false for all public tables: 3 table(s), none grant INSERT
+[PASS] has_table_privilege UPDATE false for all public tables: 3 table(s), none grant UPDATE
+[PASS] has_table_privilege DELETE false for all public tables: 3 table(s), none grant DELETE
+[PASS] has_table_privilege TRUNCATE false for all public tables: 3 table(s), none grant TRUNCATE
+[PASS] has_schema_privilege(public, CREATE) is false: CREATE on schema public = False
+[PASS] has_database_privilege(CREATE) is false: CREATE on database = False
+[INFO] database TEMP privilege (not asserted): TEMP on database = False
+[PASS] default_transaction_read_only is 'on': default_transaction_read_only = 'on'. NOTE: a direct client can turn this off; the privilege checks above are the real proof.
+  Revoked-function list (from create_reader.sql): pg_logical_emit_message, txid_current, pg_current_xact_id, setseed
+[PASS] EXECUTE denied: pg_logical_emit_message: all 2 overload(s) denied [pg_logical_emit_message(boolean, text, bytea); pg_logical_emit_message(boolean, text, text)]
+[PASS] EXECUTE denied: txid_current: all 1 overload(s) denied [txid_current()]
+[PASS] EXECUTE denied: pg_current_xact_id: all 1 overload(s) denied [pg_current_xact_id()]
+[PASS] EXECUTE denied: setseed: all 1 overload(s) denied [setseed(double precision)]
+[PASS] statement_timeout non-zero and <= 30 s: statement_timeout = '30s' (30000 ms). NOTE: role default; executor narrows to 5s per query via SET LOCAL.
+RESULT: all checks passed.   VERIFY_EXIT=0
+
+$ docker compose -p queryguard-demo -f docker-compose.demo.yml run --rm -T server python -m scripts.smoke_mcp
+[PASS] exactly 6 expected tools: ['describe_table', 'execute_query', 'find_columns', 'list_databases', 'list_tables', 'validate_sql']
+[PASS] list_tables works: 3 tables
+[PASS] simple SELECT returns rows: 5 rows
+[PASS] DROP TABLE blocked by rule R4: rule id = R4; error: blocked: R4: only read queries are allowed; this is a DROP statement. Rewrite it as a SELECT.
+[PASS] pg_ls_dir('.') blocked by rule R6: rule id = R6; error: blocked: R6: function pg_ls_dir is not on the list of allowed read-only functions. Rewrite the query without it.
+[PASS] generate_series(1,1e9) over cost limit: within_cost_limit=False, estimated_cost=12500000.01, cost_limit=460000
+[PASS] fake-email column is masked (basic path only; alias/substr/to_jsonb bypasses NOT tested here): email cells = ['***', '***', '***', '***', '***']
+RESULT: all checks passed.   SMOKE_EXIT=0
+
+$ docker compose -p queryguard-demo -f docker-compose.demo.yml down -v
+ Volume queryguard-demo_demo_pgdata Removed ; Network queryguard-demo_default Removed   DOWN_EXIT=0
+
+NOTES
+- Strengthened verify_setup: write probes PASS only on InsufficientPrivilege/ReadOnly errors;
+  added read-only-independent privilege checks (has_table/schema/database_privilege), TEMP as
+  INFO, default_transaction_read_only='on', statement_timeout parsed to 30000 ms (<= 30 s). No
+  check was loosened; all passed.
+- Strengthened smoke_mcp: checks 4/5 now require the check_sql rule id (R4 for DROP, R6 for
+  pg_ls_dir) from the error text, and print it. Both matched; no "no rule id" stop occurred.

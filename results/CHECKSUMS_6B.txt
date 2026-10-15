@@ -1,0 +1,131 @@
+Computed 2026-10-14 AFTER all Phase 6B runs. This is not a pre-run freeze. eval/run_attacks.py was edited (logging only) after the first reader/pii run.
+
+path:          eval/PREREGISTRATION.md
+  sha256:      7c08c85c8468d21a6ae687b1dfbf46ebc1f858458e27ac82870caf99ab468769
+  size_bytes:  6819
+  modified:    2026-10-10T18:53:08Z
+
+path:          eval/harness.py
+  sha256:      130f1c9e2978cb1fb506ef9bbcc7c2f81c5e327172a14bcab073c1982a6cce3c
+  size_bytes:  63625
+  modified:    2026-10-10T18:54:38Z
+
+path:          eval/run_attacks.py
+  sha256:      face6c793735d3c898f16fd63d77c2c58f4b0bf21d6a3e30fd490c5466548146
+  size_bytes:  20541
+  modified:    2026-10-14T05:21:14Z
+
+path:          eval/attacks_e2e.json
+  sha256:      500dec79511c3889f1953ac8ec5949ca778d69246b543914046895a90d06b219
+  size_bytes:  13779
+  modified:    2026-10-07T18:45:46Z
+
+path:          eval/tags.json
+  sha256:      c3017ed50bb741a894e8d8a4fcc25dd11db6e574827c32f6369a017c2940b625
+  size_bytes:  1251
+  modified:    2026-10-07T05:20:32Z
+
+path:          eval/prices.json
+  sha256:      df91ce4aa1954fe7d2a72de24187e714734b89ca2483fb47b279c4deffd30610
+  size_bytes:  396
+  modified:    2026-10-09T05:56:53Z
+
+path:          eval/analyze_phase6.py
+  sha256:      343026171999b15792c7ec0405015247ae5ed5731d9cfe8250fa9d68fc257d85
+  size_bytes:  25471
+  modified:    2026-10-09T11:47:35Z
+
+path:          eval/export_errors.py
+  sha256:      8a0d5cfea91681bace01aaba30f8df4724801e41b99eae599423edc650550c4f
+  size_bytes:  8018
+  modified:    2026-10-07T07:58:32Z
+
+path:          eval/sample_150.json
+  sha256:      7c3c6259c467cee78d5d5da9acc267b037bf6265b99c3ae827a0e0d530e7cc02
+  size_bytes:  2486
+  modified:    2026-10-07T05:19:22Z
+
+path:          results/RUN_LOG.md
+  sha256:      544f01bfae78238e80c4bb6ab947c1901c76ce162cdb538bed6b7927ebfeafc2
+  size_bytes:  3862
+  modified:    2026-10-14T05:26:31Z
+
+path:          results/baseline_6b.jsonl
+  sha256:      87eca9b82cb038cd47c8854852a238d2fb25bbefb24a11cf207685e2d7b23597
+  size_bytes:  691935
+  modified:    2026-10-11T19:22:52Z
+
+path:          results/main_6b.jsonl
+  sha256:      e9a17549042372b8d885c7fe143f77ce81f6199016e337d9c53093f59987e075
+  size_bytes:  2700317
+  modified:    2026-10-13T16:09:10Z
+
+path:          results/baseline_6b.errors.jsonl
+  sha256:      9dcb1d6b7eee90413dff92989b90b46bc9e633a24fcf4444cb2f6d106f262dec
+  size_bytes:  4642
+  modified:    2026-10-09T08:19:46Z
+
+path:          results/main_6b.errors.jsonl
+  sha256:      1edc372ae9783b1fea696d247526441e279236c113c366a17317068dc283745d
+  size_bytes:  6503
+  modified:    2026-10-13T15:45:52Z
+
+path:          results/attacks_plain_side_effect_6b.json
+  sha256:      688da798ac58de28bb887c7fd63d68592ec120e97588f8c83694d936333d4711
+  size_bytes:  3359
+  modified:    2026-10-14T06:23:10Z
+
+path:          results/attacks_plain_system_access_6b.json
+  sha256:      c01c557273c4d27efaae78daee237d3e7618428d9ee4981b36d661ae95e95221
+  size_bytes:  3770
+  modified:    2026-10-14T06:27:11Z
+
+path:          results/attacks_reader_hint_injection_6b.json
+  sha256:      56f9b571bdec8e9480899fb167ee1095915db85bc8187c7b66f7c788ed3565ee
+  size_bytes:  1847
+  modified:    2026-10-14T06:06:10Z
+
+path:          results/attacks_reader_parser_trick_6b.json
+  sha256:      6a35f9aa0c5597717fb7b96fd2dcc8e6f1a703a4f9f4363d3f97bd6a045895ef
+  size_bytes:  2393
+  modified:    2026-10-14T06:07:12Z
+
+path:          results/attacks_reader_pii_6b.json
+  sha256:      f3dcd526fed9a6ebfefc7704962eb3d773299b59a3c5edac7cec1063c4b5b7bf
+  size_bytes:  3616
+  modified:    2026-10-14T05:03:21Z
+
+path:          results/attacks_reader_pii_6b_diag.json
+  sha256:      c97c6e37fa71547de05d633ae5c84206e6b3faa9bce4d8f19dc3b901f5313cc4
+  size_bytes:  3718
+  modified:    2026-10-14T05:31:06Z
+
+path:          results/attacks_reader_resource_6b.json
+  sha256:      81c7653cb942c260308ebb05d6f2228e53e6f034871cb7b1fb74a23ae907008b
+  size_bytes:  3258
+  modified:    2026-10-14T06:12:12Z
+
+path:          results/attacks_reader_side_effect_6b.json
+  sha256:      aed144156c9ed631cef2c57c133a2430461592a46b6d95bf559dec214ae07a4d
+  size_bytes:  3280
+  modified:    2026-10-14T06:15:11Z
+
+path:          results/attacks_reader_system_access_6b.json
+  sha256:      1b2ee87e65f4f389091ab95736961a7def2092161674280e627dab92c82bf3d6
+  size_bytes:  3716
+  modified:    2026-10-14T06:19:46Z
+
+path:          results/attacks_reader_write_ddl_6b.json
+  sha256:      c89ac1ab86fc216df510df7b237ad91e92e7fece4f2c426780338ef57d3fad59
+  size_bytes:  2381
+  modified:    2026-10-14T06:20:38Z
+
+path:          results/fingerprint_6b_before.json
+  sha256:      0bc4f3f36ba2914abef2bb232257fbc5c48a369f9f94bdf7db360a362863b77b
+  size_bytes:  2301
+  modified:    2026-10-09T06:16:44Z
+
+path:          results/fingerprint_6b_after.json
+  sha256:      43747008418fe3e9536a50c85d588d1dc76e734968de0554e8bb8b87904029fc
+  size_bytes:  2301
+  modified:    2026-10-14T06:35:46Z

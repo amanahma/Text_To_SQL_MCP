@@ -1,0 +1,26 @@
+# secrets
+.env
+
+# Python and tool caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# local Claude Code settings
+.claude/
+
+# BIRD data (do not redistribute)
+data/
+
+# runtime logs
+logs/*.log
+logs/audit.jsonl
+
+# raw model transcripts
+results/transcripts/
+
+# archives
+*.zip

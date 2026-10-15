@@ -1,0 +1,8 @@
+{
+  "_note": "Fill input/output (USD per 1,000,000 tokens) with the real Groq prices for this model, and daily_token_limit with the provider's tokens-per-day cap. Leave input/output null to keep cost out of the report ('cost: not computed'). Do not guess prices.",
+  "model": "openai/gpt-oss-120b",
+  "unit": "USD per 1M tokens",
+  "input": 0.15,
+  "output": 0.60,
+  "daily_token_limit": 200000
+}

@@ -1,0 +1,346 @@
+# Valid cases: SQL that check_sql MUST pass (ok=True, errors=[], safe_sql set).
+#
+# Each case: {id, sql, why, expect_limit, expect_warning}.
+#   expect_limit   - the integer LIMIT expected on the OUTERMOST query of safe_sql
+#                    after R7 is applied:
+#                      * an existing literal LIMIT n with n <= max_rows is kept -> n
+#                      * LIMIT n > max_rows, LIMIT ALL, no LIMIT, or a non-literal
+#                        LIMIT (expression / subquery / parameter) -> max_rows (100)
+#                      * FETCH FIRST n ROWS ONLY with n <= max_rows is kept -> n
+#   expect_warning - true iff R7 changed the outermost LIMIT (and so emits an
+#                    'R7:' warning); false when the LIMIT is left untouched.
+# Real BIRD table/column names are used where natural (these are not executed).
+
+# --- joins ----------------------------------------------------------------- #
+- id: v_inner_join
+  sql: "SELECT s.School, f.\"Enrollment (K-12)\" FROM schools AS s INNER JOIN frpm AS f ON s.CDSCode = f.CDSCode LIMIT 10"
+  why: inner join with a quoted column
+  expect_limit: 10
+  expect_warning: false
+- id: v_left_join
+  sql: "SELECT s.School FROM schools AS s LEFT JOIN satscores AS t ON s.CDSCode = t.cds"
+  why: left join, no limit
+  expect_limit: 100
+  expect_warning: true
+- id: v_full_join
+  sql: "SELECT s.School FROM schools AS s FULL JOIN satscores AS t ON s.CDSCode = t.cds LIMIT 50"
+  why: full join with a limit
+  expect_limit: 50
+  expect_warning: false
+
+# --- grouping -------------------------------------------------------------- #
+- id: v_group_by_having
+  sql: "SELECT County, COUNT(*) AS n FROM schools GROUP BY County HAVING COUNT(*) > 5"
+  why: GROUP BY with HAVING
+  expect_limit: 100
+  expect_warning: true
+
+# --- window functions ------------------------------------------------------ #
+- id: v_window_row_number
+  sql: "SELECT School, ROW_NUMBER() OVER (PARTITION BY County ORDER BY School) AS rn FROM schools"
+  why: ROW_NUMBER window function
+  expect_limit: 100
+  expect_warning: true
+- id: v_window_rank
+  sql: "SELECT School, RANK() OVER (PARTITION BY County ORDER BY \"Enrollment (K-12)\" DESC) AS r FROM frpm LIMIT 25"
+  why: RANK window function with PARTITION BY
+  expect_limit: 25
+  expect_warning: false
+
+# --- CTEs ------------------------------------------------------------------ #
+- id: v_cte_simple
+  sql: "WITH big AS (SELECT CDSCode FROM schools WHERE County = 'Alameda') SELECT * FROM big LIMIT 5"
+  why: a WITH ... SELECT counts as SELECT
+  expect_limit: 5
+  expect_warning: false
+- id: v_cte_recursive_bounded
+  sql: "WITH RECURSIVE nums AS (SELECT 1 AS n UNION ALL SELECT n + 1 FROM nums WHERE n < 10) SELECT n FROM nums"
+  why: bounded WITH RECURSIVE
+  expect_limit: 100
+  expect_warning: true
+
+# --- subqueries ------------------------------------------------------------ #
+- id: v_subquery_in
+  sql: "SELECT School FROM schools WHERE CDSCode IN (SELECT cds FROM satscores WHERE AvgScrMath > 400) LIMIT 20"
+  why: IN subquery
+  expect_limit: 20
+  expect_warning: false
+- id: v_subquery_exists
+  sql: "SELECT School FROM schools AS s WHERE EXISTS (SELECT 1 FROM satscores AS t WHERE t.cds = s.CDSCode)"
+  why: EXISTS subquery
+  expect_limit: 100
+  expect_warning: true
+- id: v_subquery_scalar
+  sql: "SELECT School, (SELECT MAX(AvgScrMath) FROM satscores) AS top FROM schools LIMIT 3"
+  why: scalar subquery in the select list
+  expect_limit: 3
+  expect_warning: false
+- id: v_subquery_in_from
+  sql: "SELECT x.cnt FROM (SELECT County, COUNT(*) AS cnt FROM schools GROUP BY County) AS x LIMIT 15"
+  why: subquery in FROM
+  expect_limit: 15
+  expect_warning: false
+
+# --- set operations -------------------------------------------------------- #
+- id: v_union_all
+  sql: "SELECT County FROM schools UNION ALL SELECT County FROM frpm"
+  why: UNION ALL, no outer limit
+  expect_limit: 100
+  expect_warning: true
+- id: v_union_outer_limit
+  sql: "(SELECT County FROM schools) UNION (SELECT County FROM frpm) LIMIT 40"
+  why: UNION with an outer limit
+  expect_limit: 40
+  expect_warning: false
+- id: v_intersect
+  sql: "SELECT County FROM schools INTERSECT SELECT County FROM frpm"
+  why: INTERSECT, no outer limit
+  expect_limit: 100
+  expect_warning: true
+- id: v_except
+  sql: "SELECT County FROM schools EXCEPT SELECT County FROM frpm"
+  why: EXCEPT, no outer limit
+  expect_limit: 100
+  expect_warning: true
+
+# --- conditional expressions ----------------------------------------------- #
+- id: v_case
+  sql: "SELECT CASE WHEN AvgScrMath > 500 THEN 'high' ELSE 'low' END AS band FROM satscores LIMIT 10"
+  why: CASE expression
+  expect_limit: 10
+  expect_warning: false
+- id: v_coalesce_nullif
+  sql: "SELECT COALESCE(City, 'unknown') AS city, NULLIF(State, '') AS st FROM schools LIMIT 7"
+  why: COALESCE and NULLIF
+  expect_limit: 7
+  expect_warning: false
+
+# --- casts ----------------------------------------------------------------- #
+- id: v_cast_colon
+  sql: "SELECT AvgScrMath::integer AS m FROM satscores LIMIT 9"
+  why: ::integer cast
+  expect_limit: 9
+  expect_warning: false
+- id: v_cast_as_real
+  sql: "SELECT CAST(AvgScrMath AS REAL) AS m FROM satscores LIMIT 8"
+  why: CAST(... AS REAL)
+  expect_limit: 8
+  expect_warning: false
+
+# --- quoted identifiers ---------------------------------------------------- #
+- id: v_quoted_identifier_with_parens
+  sql: "SELECT \"FRPM Count (K-12)\" FROM frpm LIMIT 12"
+  why: quoted identifier with spaces and parentheses
+  expect_limit: 12
+  expect_warning: false
+
+# --- NULLS ordering -------------------------------------------------------- #
+- id: v_nulls_first
+  sql: "SELECT School FROM schools ORDER BY City ASC NULLS FIRST LIMIT 6"
+  why: NULLS FIRST
+  expect_limit: 6
+  expect_warning: false
+- id: v_nulls_last
+  sql: "SELECT School FROM schools ORDER BY City DESC NULLS LAST"
+  why: NULLS LAST, no limit
+  expect_limit: 100
+  expect_warning: true
+
+# --- DISTINCT ON ----------------------------------------------------------- #
+- id: v_distinct_on
+  sql: "SELECT DISTINCT ON (County) County, School FROM schools ORDER BY County, School LIMIT 11"
+  why: DISTINCT ON
+  expect_limit: 11
+  expect_warning: false
+
+# --- aggregate FILTER ------------------------------------------------------ #
+- id: v_aggregate_filter
+  sql: "SELECT COUNT(*) FILTER (WHERE AvgScrMath > 500) AS hi FROM satscores"
+  why: aggregate FILTER (WHERE ...)
+  expect_limit: 100
+  expect_warning: true
+
+# --- LATERAL --------------------------------------------------------------- #
+- id: v_lateral
+  sql: "SELECT s.School, j.cds FROM schools AS s, LATERAL (SELECT cds FROM satscores AS t WHERE t.cds = s.CDSCode) AS j LIMIT 4"
+  why: LATERAL join
+  expect_limit: 4
+  expect_warning: false
+
+# --- set-returning function in FROM ---------------------------------------- #
+- id: v_generate_series
+  sql: "SELECT g FROM generate_series(1, 50) AS g LIMIT 50"
+  why: generate_series in FROM
+  expect_limit: 50
+  expect_warning: false
+
+# --- date / text functions ------------------------------------------------- #
+- id: v_date_trunc
+  sql: "SELECT date_trunc('year', OpenDate) AS yr FROM schools LIMIT 5"
+  why: date_trunc
+  expect_limit: 5
+  expect_warning: false
+- id: v_extract
+  sql: "SELECT EXTRACT(YEAR FROM OpenDate) AS yr FROM schools LIMIT 5"
+  why: EXTRACT
+  expect_limit: 5
+  expect_warning: false
+- id: v_to_char
+  sql: "SELECT to_char(OpenDate, 'YYYY-MM') AS ym FROM schools LIMIT 5"
+  why: to_char
+  expect_limit: 5
+  expect_warning: false
+- id: v_string_agg
+  sql: "SELECT County, string_agg(School, ', ') AS names FROM schools GROUP BY County LIMIT 5"
+  why: string_agg
+  expect_limit: 5
+  expect_warning: false
+- id: v_ilike
+  sql: "SELECT School FROM schools WHERE School ILIKE '%high%' LIMIT 5"
+  why: ILIKE
+  expect_limit: 5
+  expect_warning: false
+
+# --- tricky but valid ------------------------------------------------------ #
+- id: v_semicolon_in_string
+  sql: "SELECT ';' AS semi, School FROM schools LIMIT 2"
+  why: a semicolon inside a string literal (still one statement)
+  expect_limit: 2
+  expect_warning: false
+- id: v_dollar_quoted_with_drop
+  sql: "SELECT $$DROP TABLE schools$$ AS note, School FROM schools LIMIT 2"
+  why: a dollar-quoted string literal that contains DROP TABLE
+  expect_limit: 2
+  expect_warning: false
+- id: v_quoted_column_named_delete
+  sql: "SELECT \"delete\" FROM event LIMIT 2"
+  why: a quoted column named delete is just an identifier
+  expect_limit: 2
+  expect_warning: false
+- id: v_column_named_sleep_hours
+  sql: "SELECT sleep_hours FROM patient LIMIT 2"
+  why: sleep_hours must not match pg_sleep as a substring
+  expect_limit: 2
+  expect_warning: false
+- id: v_trailing_semicolon
+  sql: "SELECT School FROM schools LIMIT 5;"
+  why: a single trailing semicolon is ignored
+  expect_limit: 5
+  expect_warning: false
+- id: v_line_comment
+  sql: "SELECT School -- pick the school name\nFROM schools LIMIT 5"
+  why: a -- comment must not appear in safe_sql
+  expect_limit: 5
+  expect_warning: false
+- id: v_block_comment
+  sql: "SELECT /* just the name */ School FROM schools LIMIT 5"
+  why: a /* */ comment must not appear in safe_sql
+  expect_limit: 5
+  expect_warning: false
+- id: v_parenthesised_select
+  sql: "(SELECT School FROM schools LIMIT 5)"
+  why: a parenthesised SELECT is allowed
+  expect_limit: 5
+  expect_warning: false
+
+# --- LIMIT handling -------------------------------------------------------- #
+- id: v_limit_small_kept
+  sql: "SELECT School FROM schools LIMIT 5"
+  why: LIMIT smaller than max_rows is kept
+  expect_limit: 5
+  expect_warning: false
+- id: v_limit_large_capped
+  sql: "SELECT School FROM schools LIMIT 1000"
+  why: LIMIT larger than max_rows is capped
+  expect_limit: 100
+  expect_warning: true
+- id: v_limit_all_capped
+  sql: "SELECT School FROM schools LIMIT ALL"
+  why: LIMIT ALL is capped to max_rows
+  expect_limit: 100
+  expect_warning: true
+- id: v_limit_with_offset
+  sql: "SELECT School FROM schools LIMIT 5 OFFSET 10"
+  why: LIMIT kept and OFFSET preserved
+  expect_limit: 5
+  expect_warning: false
+- id: v_fetch_first
+  sql: "SELECT School FROM schools FETCH FIRST 3 ROWS ONLY"
+  why: FETCH FIRST n ROWS ONLY treated like LIMIT n
+  expect_limit: 3
+  expect_warning: false
+
+# --- LIMIT boundary cases -------------------------------------------------- #
+- id: v_limit_100_at_cap
+  sql: "SELECT School FROM schools LIMIT 100"
+  why: LIMIT exactly at max_rows is kept unchanged
+  expect_limit: 100
+  expect_warning: false
+- id: v_limit_101_over_cap
+  sql: "SELECT School FROM schools LIMIT 101"
+  why: LIMIT one over max_rows is capped
+  expect_limit: 100
+  expect_warning: true
+- id: v_limit_zero
+  sql: "SELECT School FROM schools LIMIT 0"
+  why: LIMIT 0 is a literal within the cap, kept unchanged
+  expect_limit: 0
+  expect_warning: false
+- id: v_limit_sum_expression
+  sql: "SELECT School FROM schools LIMIT 2 + 3"
+  why: a non-literal LIMIT expression is replaced with max_rows
+  expect_limit: 100
+  expect_warning: true
+- id: v_limit_subquery
+  sql: "SELECT School FROM schools LIMIT (SELECT 5)"
+  why: a subquery LIMIT is non-literal, replaced with max_rows
+  expect_limit: 100
+  expect_warning: true
+- id: v_fetch_first_5_kept
+  sql: "SELECT School FROM schools FETCH FIRST 5 ROWS ONLY"
+  why: FETCH FIRST 5 ROWS ONLY within the cap is kept
+  expect_limit: 5
+  expect_warning: false
+- id: v_fetch_first_500_capped
+  sql: "SELECT School FROM schools FETCH FIRST 500 ROWS ONLY"
+  why: FETCH FIRST 500 ROWS ONLY is capped to max_rows
+  expect_limit: 100
+  expect_warning: true
+
+# --- owner-added cases (own_) ---------------------------------------------- #
+- id: own_v01
+  why: a function name inside a string is just text, not a call
+  expect_limit: 100
+  expect_warning: true
+  sql: |
+    SELECT 'pg_sleep(5)' AS note
+- id: own_v02
+  why: a column named pg_sleep is a column reference, not a function call
+  expect_limit: 100
+  expect_warning: true
+  sql: |
+    SELECT pg_sleep FROM yearmonth
+- id: own_v03
+  why: a quoted identifier containing a semicolon is a single identifier
+  expect_limit: 100
+  expect_warning: true
+  sql: |
+    SELECT "a;DROP TABLE x" FROM schools
+- id: own_v04
+  why: a LIMIT inside a subquery leaves the outer query with no LIMIT
+  expect_limit: 100
+  expect_warning: true
+  sql: |
+    SELECT * FROM (SELECT * FROM schools LIMIT 5) AS s
+- id: own_v05
+  why: two bracketed UNION branches each with their own LIMIT; the outer union has none
+  expect_limit: 100
+  expect_warning: true
+  sql: |
+    (SELECT CDSCode FROM schools LIMIT 500) UNION ALL (SELECT CDSCode FROM frpm LIMIT 500)
+- id: own_v06
+  why: a quoted column named limit, with a real LIMIT 5 kept unchanged
+  expect_limit: 5
+  expect_warning: false
+  sql: |
+    SELECT "limit" FROM schools LIMIT 5

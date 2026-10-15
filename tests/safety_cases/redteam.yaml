@@ -1,0 +1,101 @@
+# Phase 2B red-team findings, now FIXED in Phase 2C. These cases pin the fixed
+# behaviour (they are no longer xfail). Each records how the gap was closed; the
+# matching assertions live in tests/test_safety_redteam.py.
+#
+# Fields: {id, kind, rule, sql, why, fixed_by}.
+#   kind - block_r6 | cap_r7 | reject_r4_hint | reject_r2 (selects the assertion)
+#   rule - the rule that now handles the case
+
+# === block_r6: state-changing functions now rejected by the R6 allow-list ==== #
+# Found writing WAL / assigning an XID / mutating session state through the
+# read-only role. R6 flipped from a deny-list to an allow-list, so these (and any
+# unknown function) now fail closed; the database also revokes EXECUTE on them.
+
+- id: rt_pg_logical_emit_message
+  kind: block_r6
+  rule: R6
+  sql: "SELECT pg_logical_emit_message(true, 'qg', 'redteam')"
+  why: wrote a logical message into the WAL as qg_reader in a read-only transaction.
+  fixed_by: not on the R6 allow-list; EXECUTE revoked from PUBLIC in create_reader.sql.
+
+- id: rt_pg_logical_emit_message_nontxn
+  kind: block_r6
+  rule: R6
+  sql: "SELECT pg_logical_emit_message(false, 'qg', 'redteam-nt')"
+  why: the non-transactional variant writes to the WAL immediately.
+  fixed_by: not on the R6 allow-list; EXECUTE revoked from PUBLIC.
+
+- id: rt_txid_current
+  kind: block_r6
+  rule: R6
+  sql: "SELECT txid_current()"
+  why: forced assignment of a real transaction XID (global state change).
+  fixed_by: not on the R6 allow-list; EXECUTE revoked from PUBLIC.
+
+- id: rt_pg_current_xact_id
+  kind: block_r6
+  rule: R6
+  sql: "SELECT pg_current_xact_id()"
+  why: modern synonym of txid_current(); likewise assigns an XID.
+  fixed_by: not on the R6 allow-list; EXECUTE revoked from PUBLIC.
+
+- id: rt_setseed
+  kind: block_r6
+  rule: R6
+  sql: "SELECT setseed(0.5)"
+  why: mutated the session RNG state.
+  fixed_by: not on the R6 allow-list; EXECUTE revoked from PUBLIC.
+
+# === cap_r7: FETCH ... WITH TIES no longer bypasses the row cap ============== #
+# WITH TIES returned 761 rows against max_rows=100. R7 now replaces it with a
+# plain LIMIT min(n, max_rows).
+
+- id: rt_fetch_with_ties_1
+  kind: cap_r7
+  rule: R7
+  sql: "SELECT county FROM schools ORDER BY county FETCH FIRST 1 ROW WITH TIES"
+  why: FETCH FIRST 1 ROW WITH TIES returned every row tied on county (761 rows).
+  fixed_by: R7 converts WITH TIES to LIMIT min(n, max_rows) with a warning.
+
+- id: rt_fetch_with_ties_100
+  kind: cap_r7
+  rule: R7
+  sql: "SELECT county FROM schools ORDER BY county FETCH FIRST 100 ROWS WITH TIES"
+  why: even at the cap value, ties on the 100th row overshoot max_rows.
+  fixed_by: R7 converts WITH TIES to LIMIT min(n, max_rows) with a warning.
+
+- id: rt_offset_fetch_next_with_ties
+  kind: cap_r7
+  rule: R7
+  sql: "SELECT county FROM schools ORDER BY county OFFSET 10 ROWS FETCH NEXT 100 ROWS WITH TIES"
+  why: OFFSET ... FETCH NEXT n ROWS WITH TIES has the same overshoot.
+  fixed_by: R7 converts WITH TIES to LIMIT min(n, max_rows); OFFSET is kept.
+
+# === reject_r4_hint: VALUES and TABLE stay rejected, with a SELECT hint ====== #
+# Owner decision: keep rejecting (fail closed), but the error must help the AI
+# rewrite as a SELECT.
+
+- id: rt_values_list
+  kind: reject_r4_hint
+  rule: R4
+  sql: "VALUES (1), (2), (3)"
+  why: a bare VALUES list is read-only but not a SELECT; R4 rejects it.
+  fixed_by: R4 now suggests wrapping it in SELECT * FROM (VALUES ...) AS t.
+
+- id: rt_table_statement
+  kind: reject_r4_hint
+  rule: R4
+  sql: "TABLE schools"
+  why: TABLE t is shorthand for SELECT * FROM t; R4 rejects it.
+  fixed_by: R4 now suggests "SELECT * FROM schools instead of TABLE schools".
+
+# === reject_r2: LIMIT ALL without FROM stays rejected (fail closed) ========== #
+# Owner decision: keep rejecting. sqlglot cannot parse `SELECT 1 LIMIT ALL`
+# (a FROM-less projection), so R2 fails closed.
+
+- id: rt_limit_all_no_from
+  kind: reject_r2
+  rule: R2
+  sql: "SELECT 1 LIMIT ALL"
+  why: valid PostgreSQL, but this sqlglot cannot parse LIMIT ALL without a FROM.
+  fixed_by: fails closed at R2 (documented known limitation).

@@ -1,0 +1,192 @@
+blind_id,question_id,db_id,difficulty,result,question,evidence,gold_sql,predicted_sql,gold_rows,gold_cols,pred_rows,pred_cols,pred_error,same_after_sorting_rows,same_after_rounding,same_values_different_column_order,pred_empty,gold_empty,A_truly_wrong,B_wrong_shape,C_value_format,D_gold_doubtful
+2d4bb1fbbd90,94,financial,challenging,final_turn_failed,"List out the account numbers of female clients who are oldest and has lowest average salary, calculate the gap between this lowest average salary with the highest average salary?","Female means gender = 'F'; A11 refers to average salary; Gap = highest average salary - lowest average salary; If the person A's birthdate > B's birthdate, it means that person B is order than person A.","SELECT T1.account_id, (SELECT MAX(A11) - MIN(A11) FROM district) FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T1.account_id = T3.account_id INNER JOIN client AS T4 ON T3.client_id = T4.client_id WHERE T2.district_id = (SELECT district_id FROM client WHERE gender = 'F' ORDER BY birth_date ASC NULLS FIRST LIMIT 1) ORDER BY T2.A11 DESC NULLS LAST LIMIT 1",,1,2,0,0,no_sql,FALSE,FALSE,FALSE,TRUE,FALSE,,,,
+b374a57eb840,1144,european_football_2,simple,answered,Please state the finishing rate and curve score of the player who has the heaviest weight.,finishing rate refer to finishing; curve score refer to curve; heaviest weight refers to MAX(weight),"SELECT id, finishing, curve FROM Player_Attributes WHERE player_api_id = (SELECT player_api_id FROM Player ORDER BY weight DESC NULLS LAST LIMIT 1) LIMIT 1","WITH max_weight AS (
+  SELECT weight
+  FROM player
+  ORDER BY weight DESC
+  LIMIT 1
+), heavy_players AS (
+  SELECT player_api_id
+  FROM player
+  WHERE weight = (SELECT weight FROM max_weight)
+), latest_attrs AS (
+  SELECT
+    pa.player_api_id,
+    pa.finishing,
+    pa.curve,
+    ROW_NUMBER() OVER (
+      PARTITION BY pa.player_api_id
+      ORDER BY pa.date::timestamp DESC
+    ) AS rn
+  FROM player_attributes pa
+  JOIN heavy_players hp ON pa.player_api_id = hp.player_api_id
+)
+SELECT
+  finishing AS finishing_rate,
+  curve    AS curve_score
+FROM latest_attrs
+WHERE rn = 1;",1,3,2,2,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+57b70746caf3,207,toxicology,challenging,answered,What elements are in a double type bond?,double type bond refers to bond_type = '=';,SELECT DISTINCT T1.element FROM atom AS T1 INNER JOIN bond AS T2 ON T1.molecule_id = T2.molecule_id INNER JOIN connected AS T3 ON T1.atom_id = T3.atom_id WHERE T2.bond_type = '=',"SELECT DISTINCT element
+FROM atom
+WHERE atom_id IN (
+    SELECT atom_id
+    FROM connected
+    WHERE bond_id IN (
+        SELECT bond_id
+        FROM bond
+        WHERE bond_type = '='
+    )
+)
+OR atom_id IN (
+    SELECT atom_id2
+    FROM connected
+    WHERE bond_id IN (
+        SELECT bond_id
+        FROM bond
+        WHERE bond_type = '='
+    )
+);",13,1,5,1,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+7b4a67df8109,1002,formula_1,moderate,answered,"As of the present, what is the full name of the youngest racer? Indicate her nationality and the name of the race to which he/she first joined.",full name refers to forename+surname; Youngest racer = MAX(dob),"SELECT T1.forename, T1.surname, T1.nationality, T3.name FROM drivers AS T1 INNER JOIN driverStandings AS T2 ON T1.driverId = T2.driverId INNER JOIN races AS T3 ON T2.raceId = T3.raceId WHERE T1.dob notnull ORDER BY T1.dob DESC LIMIT 1","WITH youngest AS (
+    SELECT driverid,
+           forename,
+           surname,
+           nationality
+    FROM drivers
+    ORDER BY dob DESC NULLS LAST
+    LIMIT 1
+), first_race AS (
+    SELECT r.name AS race_name
+    FROM results res
+    JOIN races r ON res.raceid = r.raceid
+    WHERE res.driverid = (SELECT driverid FROM youngest)
+    ORDER BY r.date ASC
+    LIMIT 1
+)
+SELECT y.forename || ' ' || y.surname AS full_name,
+       y.nationality,
+       fr.race_name
+FROM youngest y
+JOIN first_race fr ON true;",1,4,1,3,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+b16215021f6e,1179,thrombosis_prediction,moderate,answered,"For the patient who was diagnosed with SLE on 1994/2/19, what was his/her anti-Cardiolipin antibody concentration status on 1993/11/12?",diagnosed with SLE refers to Diagnosis = 'SLE'; 1994/2/19 refers to Description = '1994-02-19'; anti-Cardiolipin refers to aCL IgM; 1993/11/12 refers to Examination Date = '1993/11/12',"SELECT ""aCL IgA"", ""aCL IgG"", ""aCL IgM"" FROM Examination WHERE ID IN (SELECT ID FROM Patient WHERE Diagnosis = 'SLE' AND Description = '1994-02-19') AND ""Examination Date"" = '1993-11-12'","SELECT ""aCL IgM""
+FROM examination
+JOIN patient ON examination.id = patient.id
+WHERE patient.diagnosis = 'SLE'
+  AND patient.description = DATE '1994-02-19'
+  AND ""Examination Date"" = DATE '1993-11-12';",1,3,1,1,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+dc21a3ebeb94,1130,european_football_2,moderate,no_sql,What are the short name of team who played safe while creating chance of passing?,played safe while creating chance of passing refers to chanceCreationPassingClass = 'Safe'; short name of team refers to team_short_name,SELECT DISTINCT t1.team_short_name FROM Team AS t1 INNER JOIN Team_Attributes AS t2 ON t1.team_api_id = t2.team_api_id WHERE t2.chanceCreationPassingClass = 'Safe',,43,1,0,0,no_sql,FALSE,FALSE,FALSE,TRUE,FALSE,,,,
+8218f39bb794,978,formula_1,simple,answered,How many times the circuits were held in Austria? Please give their location and coordinates.,"location coordinates refers to (lat,lng); Austria refers to country = 'Austria';","SELECT DISTINCT location, lat, lng FROM circuits WHERE country = 'Austria'","SELECT COUNT(r.raceid) AS race_count, c.location, c.lat, c.lng
+FROM circuits c
+JOIN races r ON c.circuitid = r.circuitid
+WHERE c.country = 'Austria'
+GROUP BY c.location, c.lat, c.lng
+ORDER BY race_count DESC;",2,3,2,4,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+e31756db69b5,1243,thrombosis_prediction,challenging,answered,"For all patients who are older than 55 years old, what is the percentage of female who has abnormal prothrombin time (PT)?","older than 55 years old = SUBTRACT(year(current_timestamp), year(Birthday)) > 55; abnormal prothrombin time (PT) refers to PT > = 14; percentage = DIVIDE(SUM(PT > = 14 AND SEX = 'F'), SUM(PT > = 14)) * 100; female refers to sex = 'F'; ","SELECT CAST(SUM(CASE WHEN T2.PT >= 14 AND T1.SEX = 'F' THEN 1 ELSE 0 END) AS REAL) * 100 / NULLIF(COUNT(CASE WHEN T2.PT >= 14 THEN 1 ELSE 0 END), 0) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE EXTRACT(YEAR FROM CURRENT_TIMESTAMP) - EXTRACT(YEAR FROM T1.Birthday) > 55","WITH older_patients AS (
+    SELECT p.id, p.sex
+    FROM patient AS p
+    WHERE EXTRACT(YEAR FROM AGE(CURRENT_DATE, p.birthday)) > 55
+),
+abnormal_pt AS (
+    SELECT DISTINCT o.id, o.sex
+    FROM older_patients AS o
+    JOIN laboratory AS l ON l.id = o.id
+    WHERE l.pt >= 14
+)
+SELECT
+    ROUND(
+        100.0 * SUM(CASE WHEN sex = 'F' THEN 1 ELSE 0 END)::numeric
+        / NULLIF(COUNT(*), 0),
+        2
+    ) AS female_percentage
+FROM abnormal_pt;",1,1,1,1,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+0029c0ba5f24,1235,thrombosis_prediction,moderate,answered,What are the patient's diagnosis for those who has lower red blood blood cell? State their ID and age.,"patient's diagnosis refers to Diagnosis; lower red blood cell refers to RBC < 3.5; age = SUBTRACT(year(current_timestamp), year(Birthday)); ","SELECT DISTINCT T1.Diagnosis, T1.ID, EXTRACT(YEAR FROM CURRENT_TIMESTAMP) - EXTRACT(YEAR FROM T1.Birthday) AS Age FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T2.RBC < 3.5","SELECT
+    p.id,
+    EXTRACT(YEAR FROM AGE(CURRENT_DATE, p.birthday)) AS age,
+    p.diagnosis
+FROM patient p
+WHERE EXISTS (
+    SELECT 1
+    FROM laboratory l
+    WHERE l.id = p.id
+      AND l.rbc < 3.5
+);",73,3,73,3,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+957944476d9f,948,formula_1,simple,answered,What are the maximum points of British constructors?,maximum points = MAX(points); British is a nationality,SELECT MAX(T1.points) FROM constructorStandings AS T1 INNER JOIN constructors AS T2 ON T1.constructorId = T2.constructorId WHERE T2.nationality = 'British',"SELECT c.name, MAX(cr.points) AS max_points
+FROM constructors c
+JOIN constructorresults cr ON c.constructorid = cr.constructorid
+WHERE c.nationality = 'British'
+GROUP BY c.name
+ORDER BY max_points DESC;",1,1,80,2,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+af6b840b31cd,407,card_games,moderate,answered,Lists all types of cards in German.,"German refer to language; all types refer to the subtypes, supertypes; subtypes is not null AND supertypes is not null","SELECT T1.subtypes, T1.supertypes FROM cards AS T1 INNER JOIN foreign_data AS T2 ON T1.uuid = T2.uuid WHERE T2.language = 'German' AND NOT T1.subtypes IS NULL AND NOT T1.supertypes IS NULL","SELECT DISTINCT type
+FROM foreign_data
+WHERE language = 'German';",1693,2,2150,1,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+38e6f417fc0c,1302,thrombosis_prediction,challenging,answered,"For the patients with a normal range of creatinine phosphokinase, how many of them have a positive measure of degree of coagulation?",normal range of creatinine phosphokinase refers to CPK < 250; positive measure of degree of coagulation refers to KCT = '+' or RVVT = '+' or LAC = '+' ;,SELECT COUNT(T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID INNER JOIN Examination AS T3 ON T1.ID = T3.ID WHERE T2.CPK < 250 AND (T3.KCT = '+' OR T3.RVVT = '+' OR T3.LAC = '+'),"SELECT COUNT(DISTINCT lab.id) AS patient_count
+FROM laboratory lab
+JOIN examination ex ON lab.id = ex.id
+WHERE lab.cpk < 250
+  AND (ex.kct = '+' OR ex.rvvt = '+' OR ex.lac = '+');",1,1,1,1,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+6548a311a472,728,superhero,moderate,answered,"Rank superheroes from Marvel Comics by their eye color popularity, starting with the most common color.",the superheroes from Marvel Comics refers to publisher_name = 'Marvel Comics'; most common color refers to COUNT(superhero.id) DESC;,"SELECT colour.colour AS EyeColor, COUNT(superhero.id) AS Count, RANK() OVER (ORDER BY COUNT(superhero.id) DESC NULLS LAST) AS PopularityRank FROM superhero INNER JOIN colour ON superhero.eye_colour_id = colour.id INNER JOIN publisher ON superhero.publisher_id = publisher.id WHERE publisher.publisher_name = 'Marvel Comics' GROUP BY colour.colour","SELECT c.colour AS eye_colour,
+       COUNT(s.id) AS superhero_count
+FROM superhero AS s
+JOIN publisher AS p   ON s.publisher_id = p.id
+JOIN colour    AS c   ON s.eye_colour_id = c.id
+WHERE p.publisher_name = 'Marvel Comics'
+GROUP BY c.colour
+ORDER BY superhero_count DESC;",19,3,19,2,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+a943c3e12027,23,california_schools,moderate,answered,List the names of schools with more than 30 difference in enrollements between K-12 and ages 5-17? Please also give the full street adress of the schools.,Diffrence in enrollement = `Enrollment (K-12)` - `Enrollment (Ages 5-17)`,"SELECT T1.School, T1.Street FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.""Enrollment (K-12)"" - T2.""Enrollment (Ages 5-17)"" > 30","SELECT
+    s.school,
+    CONCAT_WS(', ', s.street, s.city, s.state) || ' ' || s.zip AS address
+FROM frpm f
+JOIN schools s ON s.cdscode = f.cdscode
+WHERE (""Enrollment (K-12)"" - ""Enrollment (Ages 5-17)"") > 30
+LIMIT 100;",1239,2,100,2,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+ed175c67a114,1107,european_football_2,moderate,answered,When was the first time did Kevin Constant have his highest crossing score? Give the date.,Kevin Constant refers to player_name = 'Kevin Constant'; highest crossing score refers to MAX(crossing),"SELECT ""date"" FROM (SELECT t2.crossing, t2.""date"" FROM Player AS t1 INNER JOIN Player_Attributes AS t2 ON t1.player_fifa_api_id = t2.player_fifa_api_id WHERE t1.player_name = 'Kevin Constant' ORDER BY t2.crossing DESC) AS subquery ORDER BY ""date"" DESC LIMIT 1","SELECT MIN(date)::date AS first_highest_crossing_date
+FROM player_attributes
+WHERE player_api_id = (
+    SELECT player_api_id
+    FROM player
+    WHERE player_name = 'Kevin Constant'
+)
+  AND crossing = (
+    SELECT MAX(crossing)
+    FROM player_attributes
+    WHERE player_api_id = (
+        SELECT player_api_id
+        FROM player
+        WHERE player_name = 'Kevin Constant'
+    )
+);",1,1,1,1,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+e4d7df60c221,1149,thrombosis_prediction,moderate,no_sql,Are there more in-patient or outpatient who were male? What is the deviation in percentage?,"male refers to SEX = 'M'; in-patient refers to Admission = '+'; outpatient refers to Admission = '-'; percentage = DIVIDE(COUNT(ID) where SEX = 'M' and Admission = '+', COUNT(ID) where SEX  = 'M' and Admission = '-')","SELECT CAST(SUM(CASE WHEN Admission = '+' THEN 1 ELSE 0 END) AS REAL) * 100 / NULLIF(SUM(CASE WHEN Admission = '-' THEN 1 ELSE 0 END), 0) FROM Patient WHERE SEX = 'M'",,1,1,0,0,no_sql,FALSE,FALSE,FALSE,TRUE,FALSE,,,,
+d23e933909e6,260,toxicology,moderate,answered,Calculate the total atoms with triple-bond molecules containing the element phosphorus or bromine.,triple bond refers to bond_type = '#'; phosphorus refers to element = 'p'; bromine refers to element = 'br',"SELECT COUNT(T1.atom_id) FROM atom AS T1 INNER JOIN molecule AS T2 ON T1.molecule_id = T2.molecule_id INNER JOIN bond AS T3 ON T2.molecule_id = T3.molecule_id WHERE T3.bond_type = '#' AND T1.element IN ('p', 'br')","SELECT COUNT(*) AS total_atoms
+FROM atom
+WHERE molecule_id IN (
+    SELECT molecule_id
+    FROM bond
+    WHERE bond_type = '#'
+    INTERSECT
+    SELECT molecule_id
+    FROM atom
+    WHERE element IN ('p', 'br')
+);",1,1,1,1,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+1cebeb15158d,459,card_games,moderate,answered,"Which card costs more converted mana, ""Serra Angel"" or ""Shrine Keeper""?","""Serra Angel"" refers to name = 'Serra Angel'; ""Shrine Keeper"" refers to name = 'Shrine Keeper'; card costs more converted mana when the value of convertedManaCost is greater","SELECT name FROM cards WHERE name IN ('Serra Angel', 'Shrine Keeper') ORDER BY convertedManaCost DESC NULLS LAST LIMIT 1","SELECT name, convertedmanacost
+FROM cards
+WHERE name IN ('Serra Angel', 'Shrine Keeper')
+ORDER BY convertedmanacost DESC
+LIMIT 1;",1,1,1,2,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,
+501fe06d96be,1323,student_club,moderate,answered,List all the names of events that had an attendance of over 20 students but were not fundraisers.,name of events refers to event_name; attendance of over 20 students COUNT(event_id) > 20.,SELECT T1.event_name FROM event AS T1 INNER JOIN attendance AS T2 ON T1.event_id = T2.link_to_event GROUP BY T1.event_id HAVING COUNT(T2.link_to_event) > 20 EXCEPT SELECT T1.event_name FROM event AS T1 WHERE T1.type = 'Fundraiser',"SELECT e.event_name
+FROM event e
+WHERE (
+    SELECT COUNT(*)
+    FROM attendance a
+    WHERE a.link_to_event = e.event_id
+) > 20
+  AND NOT EXISTS (
+    SELECT 1
+    FROM budget b
+    WHERE b.link_to_event = e.event_id
+);",8,1,0,1,,FALSE,FALSE,FALSE,TRUE,FALSE,,,,
+7b8b6ddc0125,682,codebase_community,moderate,answered,Which is the most valuable post in 2010? Please give its id and the owner's display name.,the most valuable post in 2015 refers to MAX(FavoriteCount) where year(CreationDate) = 2010;,"SELECT T2.OwnerUserId, T1.DisplayName FROM users AS T1 INNER JOIN posts AS T2 ON T1.Id = T2.OwnerUserId WHERE TO_CHAR(CAST(T1.CreationDate AS TIMESTAMP), 'YYYY') = '2010' ORDER BY T2.FavoriteCount DESC NULLS LAST LIMIT 1","SELECT p.id,
+       u.displayname AS owner_displayname
+FROM   posts p
+JOIN   users u ON p.owneruserid = u.id
+WHERE  EXTRACT(YEAR FROM p.creaiondate) = 2010
+ORDER BY p.favoritecount DESC
+LIMIT 1;",1,2,1,2,,FALSE,FALSE,FALSE,FALSE,FALSE,,,,

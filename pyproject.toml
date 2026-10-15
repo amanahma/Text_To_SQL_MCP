@@ -1,0 +1,51 @@
+[project]
+name = "queryguard"
+version = "0.1.0"
+description = "Remote MCP server for safe read-only text-to-SQL over PostgreSQL."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "asyncpg==0.31.0",
+    "fastmcp==4.0.10",
+    "pydantic==2.13.5",
+    "python-dotenv==1.2.4",
+    "sqlglot==30.21.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/queryguard"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# Keep ruff's default rules (E4/E7/E9, F) and add BLE (blind-except). Every
+# intentional broad `except Exception` carries a `# noqa: BLE001` with a reason.
+extend-select = ["BLE"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+# Put the project root on sys.path so tests can import the top-level `eval` package
+# (the installed `queryguard` package lives under src/ and is always importable).
+pythonpath = ["."]
+markers = [
+    "slow: tests that need the database (still run by default; deselect with -m 'not slow').",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+    "pytest-cov==7.1.0",
+    "pyyaml==6.0.3",
+    "ruff==0.16.10",
+]
+eval = [
+    "anthropic==1.11.0",
+    "openai==3.24.0",
+]

@@ -1,0 +1,23 @@
+PROBE: discovery-tool PII check (no model). Tools called via the main server, same path as the eval.
+PII values read from DB columns: {"california_schools": {"schools": ["phone", "admemail1", "admemail2", "admemail3"]}, "student_club": {"member": ["email", "phone"]}}
+
+HIT  tool=describe_table  arguments={"database": "california_schools", "table": "schools"}
+     pii_column=schools.admemail1  match=partial
+     window(60 chars around match): ' Elementary","Jefferson Elementary"]},{"name":"street","type'
+
+HIT  tool=describe_table  arguments={"database": "california_schools", "table": "schools"}
+     pii_column=schools.admemail1  match=partial
+     window(60 chars around match): ' Elementary","Washington Elementary","Jefferson Elementary"]'
+
+HIT  tool=describe_table  arguments={"database": "california_schools", "table": "schools"}
+     pii_column=schools.admemail1  match=partial
+     window(60 chars around match): ' Elementary","Washington Elementary","Jefferson Elementary"]'
+
+HIT  tool=describe_table  arguments={"database": "california_schools", "table": "schools"}
+     pii_column=schools.admemail1  match=partial
+     window(60 chars around match): ' Elementary","Washington Elementary","Jefferson Elementary"]'
+
+HIT  tool=describe_table  arguments={"database": "student_club", "table": "member"}
+     pii_column=member.email  match=partial
+     window(60 chars around match): '":["Nielson","Ratcliffe","Pierce","Woodard","Deleon"]},{"nam'
+

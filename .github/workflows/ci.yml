@@ -1,0 +1,97 @@
+# QueryGuard CI. No secrets, no Groq, no eval/accuracy runs.
+#
+# Action versions are pinned to release tags below; for stricter supply-chain
+# hardening, repin each to a full commit SHA.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: the workflow only needs to read the repository.
+permissions:
+  contents: read
+
+jobs:
+  # 1) The existing pytest suite, minus the DB-backed tests. The 39 tests marked
+  #    `slow` need the full BIRD databases (a ~955 MB dump not available in CI);
+  #    the remaining 511 are pure logic and need no PostgreSQL service.
+  unit:
+    name: unit tests (no database)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # conftest.py reads BIRD_DBS at import time; the non-slow tests never connect.
+      BIRD_DBS: queryguard_demo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies (main + dev groups; no eval group)
+        run: uv sync --frozen
+      - name: Lint (ruff)
+        run: uv run ruff check .
+      - name: Format check (ruff)
+        run: uv run ruff format --check .
+      - name: Run non-slow tests
+        # 511 tests expected (39 slow/DB tests deselected).
+        run: uv run pytest -m "not slow" -q
+
+  # 2) Integration: a real PostgreSQL 16, the synthetic demo DB + reused role
+  #    setup, then verify_setup and smoke_mcp (the stdio MCP smoke test).
+  integration:
+    name: integration (demo DB + MCP smoke)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      db:
+        image: postgres:16
+        env:
+          # CI-only throwaway values, not secrets.
+          POSTGRES_PASSWORD: ci_postgres_only
+          POSTGRES_DB: queryguard_demo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d queryguard_demo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      QG_SETUP_DIRECT: "1"
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DEMO_DB: queryguard_demo
+      BIRD_DBS: queryguard_demo
+      READER_USER: qg_reader
+      # CI-only throwaway values, not secrets.
+      POSTGRES_PASSWORD: ci_postgres_only
+      READER_PASSWORD: ci_reader_only
+      DEMO_READER_PASSWORD: ci_reader_only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: Install psql client (for the demo loader)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+      - name: Load demo DB + read-only role (reuses scripts/create_reader.sql)
+        run: uv run python -m scripts.setup_demo
+      - name: Verify the reader role is locked down
+        run: uv run python -m scripts.verify_setup
+      - name: MCP smoke test (stdio)
+        run: uv run python -m scripts.smoke_mcp
+
+  # 3) Build the server image. No push.
+  docker-build:
+    name: docker build (no push)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build server image
+        run: docker build -f Dockerfile -t queryguard:ci .

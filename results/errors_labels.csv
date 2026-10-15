@@ -1,0 +1,145 @@
+blind_id,A_truly_wrong,B_wrong_shape,C_value_format,D_gold_doubtful,label_reason
+6548a311a472,,1,,,missing RANK/popularity column; count-per-eye-colour logic matches
+cde31ce1276c,,1,,,selected card name vs gold's id; filter logic identical
+501fe06d96be,1,,,,returned empty; different not-fundraiser logic (budget vs event type)
+9e9c9aa44f88,,1,,,gold has extra columns; pred returns requested full names via min-lap
+dc5cba4a5f52,,1,,,same top-20 lap query; pred returns fewer columns than gold
+b6502265640b,1,,,,used latest rating vs gold's sum-over-all; different percentage
+9caf36d157e8,1,,,,matched by post title/owner vs gold's postHistory text/last-editor
+c4e97aabcd81,1,,,,filtered city instead of county; also different column shape
+ae2c43d42942,,,,1,gold orders buildUpPlaySpeed ASC for 'highest' so returns lowest 4
+6707e3fd764e,1,,,,did not restrict to first race; points from results vs driverStandings
+dedde2ab86be,1,,,,no isPromo filter; different 'most rulings' logic
+5fa4f950e025,,1,,,missing the Title column gold returns
+2ffc89453864,1,,,,used foreign_data.type vs gold's cards subtypes/supertypes
+92348b43736f,1,,,,returned empty; date-range handling on transactions vs yearmonth
+5b9a608d58ea,,1,,,extra total-count column added
+c3042f186e47,1,,,,counts all atoms in the molecules vs gold's p/br atoms only
+649d539726d2,,,,1,"gold filters user CreationDate and returns owner id, not post id"
+2f69ceba20ba,1,,,,result differs from gold's nested-max league query
+c6c7a08e7869,,1,,,rank/order differs due to NULLS placement in height ordering
+24caea6233cb,,,,1,"gold counts molecules with any non-F atom, not fluorine-free ones"
+a943c3e12027,1,,,,pred LIMIT drops rows; address column also differs
+3827d2854dd7,1,,,,diagnosis taken from examination vs gold's patient table
+3c7795ee28eb,1,,,,latest rating vs gold's sum-over-all ratings
+79cd2e84d34c,1,,,,different bond join path yields a different element set
+f13019e217a6,1,,,,returned empty; complex female-oldest-salary logic failed
+d23e933909e6,1,,,,counts all atoms in the molecules vs gold's p/br atoms only
+b16215021f6e,,1,,,missing aCL IgA and IgG columns (returned only IgM)
+1684cb8870bb,,,,1,"gold joins atom on molecule_id, inflating the single-bond counts"
+ed175c67a114,,,1,,same max-crossing date; numeric/date format differs
+9f0ec3d480ae,1,,,,no SQL produced (final-turn failure)
+2d4bb1fbbd90,1,,,,no SQL produced (final-turn failure)
+b67c5f34018f,1,,,,averages A15 over district-account join vs gold's weighting
+056adc761116,1,,,,query errored (column cons_2012 does not exist)
+f48fec5246a5,1,,,,no SQL produced
+20f90bf9601e,1,,,,no isPromo filter; ordered by ruling count only
+67d055472e09,1,,,,no SQL produced
+d62fc1caeb3d,,,,1,"gold counts molecules with any non-F atom, not fluorine-free ones"
+6854660774f7,,1,,,returned colour names vs gold's colour ids
+4a99347a195d,,,1,,same max speed; numeric vs text representation (matches on rounding)
+3186ef32c2ea,1,,,,counts distinct customers vs gold's per-yearmonth-row count
+7c53ae62307c,1,,,,returned empty; date-range handling
+57b1beb8785a,1,,,,no SQL produced
+123e76fbe2a6,,,,1,gold orders buildUpPlaySpeed ASC for 'highest' so returns lowest 4
+a58eca2b71b2,1,,,,no SQL produced
+8f7de03ab617,1,,,,no SQL produced
+2f82bf72f05b,1,,,,no SQL produced
+d533f0da7449,,,,1,gold filters by a time pattern and never identifies the champion
+22f484579714,,1,,,extra dob column (same oldest driver)
+20c5ed8e4952,1,,,,missing the weekly-statement frequency filter
+83b22cb70407,,,,1,"gold orders q2 ASC NULLS FIRST, a suspect best-time selection"
+7db1f7ba2a89,1,,,,query errored (unknown column magnet_multi_count)
+25482dbe4519,1,,,,returned empty; extra Low-Grade filter over-restricts
+76fa79473726,1,,,,MAX single consumption vs gold's max monthly SUM
+3aca51e1f3ad,1,,,,no SQL produced
+e05502d13635,1,,,,no SQL produced (final-turn failure)
+c4a34b803b0d,,,,1,gold orders q2 ASC NULLS FIRST (suspect best-time selection)
+c1cacfb0506f,,1,,,concatenated name (fewer columns) vs gold's separate fields
+dc21a3ebeb94,1,,,,no SQL produced
+c679cf6f4d0b,,,,1,gold filters by a time pattern and never identifies the champion
+ae88faf98012,1,,,,COUNT(DISTINCT id) vs gold's COUNT over joined rows
+f16ef974d393,1,,,,no SQL produced
+38e6f417fc0c,1,,,,COUNT(DISTINCT id) vs gold's COUNT over 3-way join
+734f48b6a721,1,,,,different attribute-row selection (latest vs gold LIMIT 1); extra id col
+79cc3b46e2c7,1,,,,single set (LIMIT 1) vs gold's all matching sets
+b98e7fb230ba,1,,,,query errored (subquery returned more than one row)
+c8ebaff1dcaf,1,,,,COUNT(DISTINCT id) vs gold's COUNT over joined rows
+ec3de645d9a0,,1,,,gold adds forename/surname; pred returns only the requested ref name
+2a19470b4c76,,,1,,same condition; returns Yes/No strings vs gold TRUE/FALSE
+e4d01fd47a7b,,,,1,"gold orders rate ASC NULLS FIRST, selecting a null-rate school"
+f2d4d4036292,1,,,,away-win count/season logic differs from gold
+9d5990c62d1f,,1,,,extra total-budget column; per-row vs grouped amounts
+fe24ef9bc39d,,1,,,missing the RANK column
+2cee030f3068,1,,,,grouped per constructor vs gold's single overall MAX
+e4d7df60c221,1,,,,no SQL produced
+7d507646e196,1,,,,no SQL produced
+17defd174a7a,1,,,,no SQL produced (final-turn failure)
+407c06a9a31e,1,,,,averages A15 over distinct districts vs gold's account join
+08fe9457b594,1,,,,result differs from gold's HAVING=MAX league query
+a45d8c221f1b,1,,,,no SQL produced
+f2601d5c78f3,1,,,,"aggregated over all drivers, not the top-3 youngest"
+7b8b6ddc0125,,,,1,"gold filters user CreationDate and returns owner id, not post id"
+b374a57eb840,1,,,,different attribute-row selection; column shape differs
+45e0de334664,,1,,,concatenated full_name vs gold's first/last columns
+b9ba730c3253,1,,,,different '4th atom' selection; adds a count column
+4f073fd90388,1,,,,result differs (tie/NULL) in fastest-lap-speed driver
+f8814e9d1df1,1,,,,different not-fundraiser logic from gold
+05397fde7992,1,,,,max crossing among left-footed vs gold's global max
+4005312b2e58,,,1,,same max-crossing date; format/representation differs
+39bcce5cb272,1,,,,COUNT(DISTINCT player) vs gold's COUNT of attribute rows
+208aa833dabc,,1,,,ROW_NUMBER and rank column moved to front (column order)
+ac7074f2a677,1,,,,result differs from gold's HAVING=MAX league query
+e942ed25fcf6,1,,,,denominator is all customers vs gold's transactions that day
+440b5bbb0fdb,,,,1,gold returns empty for this comment/time match (doubtful)
+795775315faa,,1,,,pred concatenates names vs gold's six admin-name columns
+55476e98b761,,1,,,missing the Title column
+c70c35882849,1,,,,returns all molecule atoms vs gold's atoms of that bond
+eb18f3847416,,1,,,id vs name and flag vs status-string representations
+9db24fa9298e,1,,,,no SQL produced
+02f6707620db,1,,,,two counts with strict thresholds vs gold's single difference
+087a22e2aa11,1,,,,denominator is all customers vs gold's transactions that day
+5a068c5c11d4,1,,,,COUNT(DISTINCT id) vs gold's COUNT over 3-way join
+3bf43f68ee55,,,1,,same percentage; pred rounds to 2 decimals
+db2807232767,,1,,,extra school_name column vs gold's rate-only output
+03236fa2d1e7,,1,,,concatenated full_name vs gold's first/last columns
+9031f4eebb82,,,,1,"gold uses Player_Attributes.id, not player id, for 'players 6 and 23'"
+0d7b9ae8a4b9,,,,1,"gold uses Player_Attributes.id, not player id, for 'players 6 and 23'"
+e9faf6135a7b,1,,,,did not restrict to first race; points from results
+e31756db69b5,,,,1,gold's COUNT(CASE..ELSE 0) counts all rows (denominator bug)
+73017f18ffd1,1,,,,different '4th atom' selection; adds a count column
+1fbe0f7d0dbd,1,,,,result differs (ties) in fastest-lap-speed driver
+9cda5772f726,1,,,,"aggregated over all drivers, not the top-3 youngest"
+eaeebced7d85,,,,1,ambiguous 'in 2011'; gold computes over users not posts
+af6b840b31cd,1,,,,used foreign_data.type vs gold's cards subtypes/supertypes
+834456bea2c8,1,,,,no SQL produced
+842a63aa4105,,1,,,selected card name vs gold's id
+1cebeb15158d,,1,,,extra convertedManaCost column
+3bd2133633d9,1,,,,summed consumption per customer vs gold's per-row count
+ef3abd41ec3b,1,,,,'fastest lap on the race' interpretation differs from gold
+8b972bc89376,,,1,,same percentage; pred rounds to 2 decimals
+9c813d965ebc,1,,,,two counts with strict thresholds vs gold's single difference
+e4ddbe722760,,1,,,pred returns only admin1 concatenated vs gold's six admin columns
+980c77379826,1,,,,computes amount*price and a different gas-station filter
+36eed31f9abe,1,,,,no SQL produced (final-turn failure)
+34287de84c80,,1,,,full concatenated address vs gold's Street-only column
+7021a2b0a20f,1,,,,two counts vs gold's single ratio; different computation
+957944476d9f,1,,,,per-constructor grouping and constructorresults vs gold's MAX over standings
+86fb95e8e6f7,,1,,,returned colour names vs gold's colour ids
+9f16af6c9c95,,1,,,missing aCL IgA and IgG columns
+57b70746caf3,1,,,,different bond join path yields a different element set
+22a1a66d8e1e,,,,1,"gold orders rate ASC NULLS FIRST, selecting a null-rate school"
+3831b73096a7,1,,,,uses amount vs gold's Price; different computation
+7b4a67df8109,,1,,,concatenated name (fewer columns) vs gold's separate fields
+ec52bf8b431f,1,,,,aggregates ratio per event vs gold's per-budget-row ratio
+36f35bdde7a6,1,,,,no SQL produced (final-turn failure)
+5483419419c3,1,,,,uses gsserved vs gold's GSoffered; different column/results
+286adbde1828,,,,1,"gold joins atom on molecule_id, inflating the single-bond counts"
+0c1f126a514a,,,1,,same max speed; numeric vs text representation (matches on rounding)
+d8b9827df76b,,1,,,DISTINCT and non-null codes drop gold's duplicate/NULL rows
+9e9ebc27c820,1,,,,age via AGE() vs gold's year-subtraction; column order also differs
+73916417dfa9,,1,,,gold adds forename/surname; pred returns only the requested ref name
+0029c0ba5f24,1,,,,age via AGE() vs gold's year-subtraction; column order also differs
+79ec058c440b,,,,1,gold's COUNT(CASE..ELSE 0) counts all rows (denominator bug)
+8218f39bb794,,1,,,extra race-count column added
+89a17232fdb7,,,1,,same percentage difference; pred rounds to 2 decimals

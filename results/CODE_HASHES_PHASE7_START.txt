@@ -1,0 +1,320 @@
+Computed 2026-10-14 after all Phase 6B runs; not a pre-run freeze.
+
+Scope: every file under src/queryguard/, eval/, scripts/, tests/, plus
+pyproject.toml and uv.lock. __pycache__ directories and .pyc files are
+excluded (compiled bytecode, not source). Paths are repo-relative; mtime is UTC.
+
+path:   src/queryguard/__init__.py
+  sha256: cfa159bab56229415b7c06549c1619e446e06c401558f0f17cb8c417dca398e8
+  size:   178
+  mtime:  2026-10-04T05:29:15.563461Z
+path:   src/queryguard/db.py
+  sha256: f73380c90a525e5bbe870edda5cf56f87252906ffa2b9de70680aafd2014d557
+  size:   4292
+  mtime:  2026-10-06T11:53:07.807540Z
+path:   src/queryguard/executor.py
+  sha256: 3add5128e2b0a9d411693290dc5b48a2d1093dce2988dbf41d73eb2e7fa7b8f1
+  size:   19502
+  mtime:  2026-10-06T17:18:43.098006Z
+path:   src/queryguard/function_allowlist.py
+  sha256: fa0e9d1673dccf750357aec6b66c2af6d264810eaaf6f2a5076755c94ff2da5a
+  size:   11290
+  mtime:  2026-10-06T05:06:47.537755Z
+path:   src/queryguard/pii.py
+  sha256: 357cc586df89568d742ee96ae854de0db0fa69e788fb341ed5ea5f1ac4e77faf
+  size:   1848
+  mtime:  2026-10-06T15:18:57.902869Z
+path:   src/queryguard/safety.py
+  sha256: 01e53d2ff1a74442a32a840cd7d802644d293741fbd9d1ea1ee75efd2386d284
+  size:   17257
+  mtime:  2026-10-06T04:34:48.355448Z
+path:   src/queryguard/schema.py
+  sha256: f425ac9dac3845b8e983a40d164b2d7781ac5f683fae5be42f59bc5d7f76c5e0
+  size:   20264
+  mtime:  2026-10-06T17:18:53.838649Z
+path:   src/queryguard/server.py
+  sha256: 9fcfd4b0d9b2a9060912940ce12c4649a83a57c135f5aadf4831beccc0128af3
+  size:   7871
+  mtime:  2026-10-06T12:31:19.935992Z
+path:   eval/__init__.py
+  sha256: 551e32d0debae4f6e47565388877a92e678185900d3b76edf33e0711363df120
+  size:   85
+  mtime:  2026-10-04T09:42:24.962506Z
+path:   eval/analyze_phase6.py
+  sha256: 343026171999b15792c7ec0405015247ae5ed5731d9cfe8250fa9d68fc257d85
+  size:   25471
+  mtime:  2026-10-09T11:47:35.084742Z
+path:   eval/attacks_e2e.json
+  sha256: 500dec79511c3889f1953ac8ec5949ca778d69246b543914046895a90d06b219
+  size:   13779
+  mtime:  2026-10-07T18:45:46.829715Z
+path:   eval/baseline_server.py
+  sha256: 50c548c96df84f28c0814529888a7e6fa0c16d5a2c0c2d5916440eae7fbec92c
+  size:   5679
+  mtime:  2026-10-04T09:54:06.101422Z
+path:   eval/check_sample.py
+  sha256: b0d756404eaae3b941c81fafc8e95aebbcb91ffb242d73e032c8d557b79dc1bc
+  size:   3038
+  mtime:  2026-10-07T05:20:54.587965Z
+path:   eval/dev_10.json
+  sha256: 96bbe93c40a51ff32a4d5d7e51dfba9cf1a79b1a3737d2d1ab753f4cebaa21bc
+  size:   197
+  mtime:  2026-10-04T18:12:29.657236Z
+path:   eval/dryrun_attacks.py
+  sha256: fb7f6c0e3889fa6a5d214e00bc3368050e77cfad0adfd9f35662c88abd933841
+  size:   14134
+  mtime:  2026-10-08T18:13:39.508240Z
+path:   eval/export_errors.py
+  sha256: 8a0d5cfea91681bace01aaba30f8df4724801e41b99eae599423edc650550c4f
+  size:   8018
+  mtime:  2026-10-07T07:58:32.618923Z
+path:   eval/gold_issues.md
+  sha256: cd144f18bac75bc4e5cf1c16568d5aa8aa1579338c2e7dfa05095bc04fb70cc7
+  size:   1395
+  mtime:  2026-10-04T18:47:51.872419Z
+path:   eval/harness.py
+  sha256: 130f1c9e2978cb1fb506ef9bbcc7c2f81c5e327172a14bcab073c1982a6cce3c
+  size:   63625
+  mtime:  2026-10-10T18:54:38.218351Z
+path:   eval/inspect.py
+  sha256: 4cee7889c6f13199d7e05f33c2ee9d3903fd8226d9c9eb612e70c7190dca6fa6
+  size:   9182
+  mtime:  2026-10-05T05:03:19.770574Z
+path:   eval/phase6_ready.py
+  sha256: 086be70d554a4574679e4000767d6484eca245ff8b4f75abfeadd5834f608d74
+  size:   9230
+  mtime:  2026-10-09T05:58:57.531633Z
+path:   eval/PREREGISTRATION.md
+  sha256: 7c08c85c8468d21a6ae687b1dfbf46ebc1f858458e27ac82870caf99ab468769
+  size:   6819
+  mtime:  2026-10-10T18:53:08.318863Z
+path:   eval/prices.json
+  sha256: df91ce4aa1954fe7d2a72de24187e714734b89ca2483fb47b279c4deffd30610
+  size:   396
+  mtime:  2026-10-09T05:56:53.378510Z
+path:   eval/pricing.toml
+  sha256: d14a7bd1925157e6240cda18d77ea3a08608ad07044fd560f433b50f4fe8b02e
+  size:   813
+  mtime:  2026-10-04T17:39:59.852469Z
+path:   eval/run_attacks.py
+  sha256: face6c793735d3c898f16fd63d77c2c58f4b0bf21d6a3e30fd490c5466548146
+  size:   20541
+  mtime:  2026-10-14T05:21:14.643560Z
+path:   eval/runs/baseline_groq_openai_gpt-oss-120b_20261004T174122Z.jsonl
+  sha256: 8075ef9f7f473976359a5c35ecdd76fac142d321a8ad2a54286e3d43e494a7bf
+  size:   41077
+  mtime:  2026-10-04T17:45:56.750734Z
+path:   eval/runs/baseline_groq_openai_gpt-oss-120b_a16401d6_20261004T183548Z.jsonl
+  sha256: 7c0d158a59e8de635792170766e8ecee18573aa399f77c22c382d5e4b2318394
+  size:   41317
+  mtime:  2026-10-04T18:39:40.232345Z
+path:   eval/runs/baseline_groq_openai_gpt-oss-120b_a16401d6_20261004T184823Z.jsonl
+  sha256: 698480572eb500f3d8d79fb58e4f1dda7ff923ed73e5c3f0d4c71e753ed7049d
+  size:   227761
+  mtime:  2026-10-05T05:24:34.781479Z
+path:   eval/runs/main_groq_openai_gpt-oss-120b_a16401d6_20261006T173027Z.jsonl
+  sha256: bcd8b3a61822012d35eb96802d06fdb4ca70e022472fe700e0d8cb4e8da74eac
+  size:   23233
+  mtime:  2026-10-06T17:31:22.936104Z
+path:   eval/runs/main_groq_openai_gpt-oss-120b_a16401d6_20261006T173230Z.jsonl
+  sha256: 0b9bb4de9fc06580f8ac63072d75d45fac07164cdbdc5b40867f4929e5e056c7
+  size:   23283
+  mtime:  2026-10-06T17:33:17.150374Z
+path:   eval/runs/main_groq_openai_gpt-oss-120b_a16401d6_20261006T174442Z.jsonl
+  sha256: 316ac72c9d3f4d7c64ca96375bc75083dfec617e28e889769e6b801a42a5955b
+  size:   23284
+  mtime:  2026-10-06T17:45:30.301091Z
+path:   eval/runs/main_groq_openai_gpt-oss-120b_a16401d6_20261006T175358Z.jsonl
+  sha256: 446399b85cc91d652e7946a301bcba862722081a782479ea3e1fd8f48095c35f
+  size:   173109
+  mtime:  2026-10-06T18:21:23.180568Z
+path:   eval/sample_150.json
+  sha256: 7c3c6259c467cee78d5d5da9acc267b037bf6265b99c3ae827a0e0d530e7cc02
+  size:   2486
+  mtime:  2026-10-07T05:19:22.563730Z
+path:   eval/sample_50.json
+  sha256: 26316c07f6cf85f3a41cd7de17e1c742850481d430efca565a3b211ca0758088
+  size:   565
+  mtime:  2026-10-04T09:48:27.673141Z
+path:   eval/scoring.py
+  sha256: 87d6d5e3631e073f43e77614ef0da8be34452e9c6ca0699c0e6990038fa081b2
+  size:   3054
+  mtime:  2026-10-04T11:41:53.789240Z
+path:   eval/tags.json
+  sha256: c3017ed50bb741a894e8d8a4fcc25dd11db6e574827c32f6369a017c2940b625
+  size:   1251
+  mtime:  2026-10-07T05:20:32.322206Z
+path:   scripts/_dockerutil.py
+  sha256: 8289f7ca1992deef38679242c22528524dee593e801ab325e5492b5fc2d3a0d6
+  size:   2171
+  mtime:  2026-10-04T08:08:15.151411Z
+path:   scripts/analyze_dbs.py
+  sha256: e1f407f1870ba3b0c060cd021396ebda15246b120a500a40781296e996222252
+  size:   1547
+  mtime:  2026-10-06T12:20:11.422879Z
+path:   scripts/calibrate_explain.py
+  sha256: fa0e72f9c8401ebfc7a5094857e98e3d70e5df2abc2fef9ef6e233efe3029566
+  size:   8968
+  mtime:  2026-10-06T05:50:23.586830Z
+path:   scripts/check_scoring_on_gold.py
+  sha256: 353b65a7729004d0d851bf8649d91c2910a7cc4354c59e54c17a1d023de12be1
+  size:   7572
+  mtime:  2026-10-04T16:28:29.297665Z
+path:   scripts/create_plain.py
+  sha256: 6180175cc49fe70943095b6dc2c808990c469a9a80b06b5af522bb639e556a8c
+  size:   6235
+  mtime:  2026-10-07T19:15:28.248694Z
+path:   scripts/create_plain.sql
+  sha256: ec8e6d9f8a1620d5266e9f407a711d18cf72013e0a254d2858006d3441449c39
+  size:   3926
+  mtime:  2026-10-07T19:12:59.345572Z
+path:   scripts/create_reader.py
+  sha256: e3b9a27b41cc5d6f3ba6f6b6758f5ff2f73a82345d42f7527657e45840456f8c
+  size:   3053
+  mtime:  2026-10-04T08:20:03.966207Z
+path:   scripts/create_reader.sql
+  sha256: abbb40a7301267fc7a4a13ab82d3864e233c3cf1f05f5909824860272497a286
+  size:   3753
+  mtime:  2026-10-06T04:41:38.265229Z
+path:   scripts/db_fingerprint.py
+  sha256: 5b5f513478fcfb3ff771a3b114811db92d792bcf4814f3314c92c529dfb42cf2
+  size:   2298
+  mtime:  2026-10-07T07:58:32.618923Z
+path:   scripts/drop_plain.py
+  sha256: ca37923cb48aae8d62fd48bb772688be5a601270cca45778a665b14d4dfb544d
+  size:   3715
+  mtime:  2026-10-08T18:10:45.598732Z
+path:   scripts/drop_plain.sql
+  sha256: a729f2ad5e6bc5e1e0d4e6be2a08a8e7f5255e52c5085156d651d090df163010
+  size:   590
+  mtime:  2026-10-07T16:21:29.310528Z
+path:   scripts/load_bird.py
+  sha256: d8c3a315ba88de14586f303785041f82bc4914edf6bde7f999c775264507117d
+  size:   5550
+  mtime:  2026-10-04T08:08:23.615867Z
+path:   scripts/split_bird.py
+  sha256: 2037fb3d4fc36dd6d373922d9989b1292aa89180db3fcadfd85ab340b2a50406
+  size:   8060
+  mtime:  2026-10-04T08:20:03.966207Z
+path:   scripts/time_gold_sql.py
+  sha256: ee0d9881bce179e8c258014d2208b17e5dff9a3be69f1094b919dbcee22eb069
+  size:   5344
+  mtime:  2026-10-04T08:18:55.066063Z
+path:   tests/conftest.py
+  sha256: d697b31faf2fac3b13bf2c8bc8e9a9ea5eb9f1212b2a5557f4386aa9fb0b63ae
+  size:   4425
+  mtime:  2026-10-06T12:29:53.160281Z
+path:   tests/safety_cases/attacks.yaml
+  sha256: 3b97899c64b4634c02f954129431df6196c36eef93b959ad0f35bdfa6bf109ab
+  size:   14621
+  mtime:  2026-10-05T16:20:37.667822Z
+path:   tests/safety_cases/redteam.yaml
+  sha256: 2a3c033755760cfd94a169ac9cf383b03f4fdb59120ed5a882cd1da084cef411
+  size:   4076
+  mtime:  2026-10-06T04:42:28.950219Z
+path:   tests/safety_cases/resource_attacks.yaml
+  sha256: 34617e6a8bf682ad414b8cd834eed33605fa13e917af2f2034ac722485ad152e
+  size:   2304
+  mtime:  2026-10-06T06:13:21.546399Z
+path:   tests/safety_cases/valid_queries.yaml
+  sha256: 1a1ed90509e32761791c695e67fdbb8d6d823740313839b7b923e236351b63ee
+  size:   12712
+  mtime:  2026-10-05T16:20:48.598485Z
+path:   tests/test_allowlist_catalog.py
+  sha256: ef40d4bd928574d370c8a7aeca04a60a66e32a5102458a07515abded40b37d81
+  size:   9270
+  mtime:  2026-10-06T05:18:08.453026Z
+path:   tests/test_analyze_phase6.py
+  sha256: 37d9d135fdd6af72d20debb9b10ca54eb0a49c378a6d17ac62106aade7e4b099
+  size:   4260
+  mtime:  2026-10-09T11:50:01.986736Z
+path:   tests/test_baseline_server.py
+  sha256: 783daa37b011ff7d5dc2fbc9f5ae3afef59a7c37472565d6049157fb17847a8e
+  size:   3212
+  mtime:  2026-10-04T09:50:47.491056Z
+path:   tests/test_bird_data.py
+  sha256: b36682d400ecf6adc59e7cdf20ace59c76da575c8f692db01cb8a7ebdaccf78e
+  size:   2229
+  mtime:  2026-10-04T08:20:03.785322Z
+path:   tests/test_db.py
+  sha256: f15e68da53259bf5ec0340728c7dc08c7aecb3fb8d95a2863aeb27f910330e6c
+  size:   2657
+  mtime:  2026-10-06T11:54:41.574170Z
+path:   tests/test_executor.py
+  sha256: bc99f512e56f67893dc34f440e3c7a58f484ea59bf75ed2459004d4b32fc585d
+  size:   18141
+  mtime:  2026-10-06T17:25:44.265576Z
+path:   tests/test_harness.py
+  sha256: c0aff6a7867c6da06de5474ef3c36db1be8aae65ed60f756d5132798e2940dda
+  size:   44976
+  mtime:  2026-10-10T18:54:38.218351Z
+path:   tests/test_inspect.py
+  sha256: 3c4bf9585a488c552b52b368f11814d8ebc6acb98c0c85118389e409f4812fce
+  size:   7142
+  mtime:  2026-10-05T05:01:41.397715Z
+path:   tests/test_main_server.py
+  sha256: 7eaad7f0be2ed9120f2cd437e602ac3bf2f258e28801bb870ea1586c2d3687ae
+  size:   3721
+  mtime:  2026-10-06T12:28:29.955104Z
+path:   tests/test_pii.py
+  sha256: 0e27d0c4ffc845c9d01e942f2d8f72d99cfde36fc703c5cd0ab935b27baba041
+  size:   2435
+  mtime:  2026-10-06T16:46:41.727922Z
+path:   tests/test_reader_revokes.py
+  sha256: 2ffbfd80d200fd18f88048511f45ec89317b15f01d6729944ea2b745fc1f9e16
+  size:   1328
+  mtime:  2026-10-06T04:43:40.658669Z
+path:   tests/test_reader_role.py
+  sha256: 8a8276de5c84e5e7e05c1cba635789a13c0fc769384636858f584181dec5ee8f
+  size:   3467
+  mtime:  2026-10-04T08:20:03.785322Z
+path:   tests/test_resource_attacks.py
+  sha256: 6439f418ffba44246a76c1462bce89e2a093bcb46cec496463dcb6b792fd1abd
+  size:   4346
+  mtime:  2026-10-06T05:48:36.853278Z
+path:   tests/test_run_attacks.py
+  sha256: 1cabf4b35a198025bdc1c5b735bfc45e188822e69c85a28f3c091da5849650af
+  size:   13743
+  mtime:  2026-10-14T05:21:47.947262Z
+path:   tests/test_safety.py
+  sha256: fdac715e2a701d810a967207b2e34804eca2af10976a459e13b0d9882542417e
+  size:   6448
+  mtime:  2026-10-05T11:50:21.404422Z
+path:   tests/test_safety_extra.py
+  sha256: 5d50535aa8c30398e594d6817efd83af07b1b571fc65169db90437df2321d7b0
+  size:   1699
+  mtime:  2026-10-05T17:52:06.562868Z
+path:   tests/test_safety_gold.py
+  sha256: d51664eff7e7a490888a15390f5bd87d7966a9af57087269cde72a28b292b2c2
+  size:   2705
+  mtime:  2026-10-05T11:18:50.872143Z
+path:   tests/test_safety_own.py
+  sha256: dbfaf7c909481589248936b64ed4911e0322ef93f554fddbcc46f164dac97999
+  size:   589
+  mtime:  2026-10-05T16:21:01.444953Z
+path:   tests/test_safety_redteam.py
+  sha256: 18b0e2226849e919a42d492f998e96a3b03a4417116ab2775dc656b2ddcc0162
+  size:   2774
+  mtime:  2026-10-06T04:42:45.025062Z
+path:   tests/test_safety_redteam_functions.py
+  sha256: bc72ca8026e6532bdab509134142f7b0e75640cb0405b756e13eca1ae9507fd2
+  size:   3895
+  mtime:  2026-10-06T04:43:23.009192Z
+path:   tests/test_schema_tools.py
+  sha256: 13e3844d02fb91e29aff883a868aa46f7c93ee04eed561c2b5ff788df17c0f07
+  size:   11525
+  mtime:  2026-10-06T16:46:28.085346Z
+path:   tests/test_scoring.py
+  sha256: f5db980f51dbfb5b717318610514aff0093b82531f93474a930667809bd07552
+  size:   1609
+  mtime:  2026-10-04T17:31:44.090232Z
+path:   pyproject.toml
+  sha256: e64f3ea5d0833b25076486c7c3e9a81572b7de97e56c0f5d1067d1ea1d8d49d2
+  size:   1265
+  mtime:  2026-10-05T11:19:40.593852Z
+path:   uv.lock
+  sha256: abbf307005a198042274eb7c969ac582a657193000089db770fef5acc93c41c2
+  size:   126615
+  mtime:  2026-10-05T11:20:01.906540Z
+
+total files: 78

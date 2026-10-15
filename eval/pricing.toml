@@ -1,0 +1,17 @@
+# Token prices in USD per 1,000,000 tokens, per model.
+# OWNER FILLS THESE IN. Leave a field blank ("") if you don't have the number;
+# any model with a blank field has its cost reported as null (not zero).
+#
+#   input        = prompt tokens that were neither cache reads nor cache writes
+#   output       = completion tokens
+#   cache_read   = tokens served from the prompt cache (cheap)
+#   cache_write  = tokens written to the prompt cache (cache_creation_input_tokens)
+
+# Groq (OpenAI-compatible). cache_read maps to prompt_tokens_details.cached_tokens;
+# Groq does not bill a separate cache-write, so leave cache_write at 0 once priced.
+# Note: reasoning tokens are billed as output (completion) tokens.
+[prices."openai/gpt-oss-120b"]
+input = "0.15"
+output = "0.60"
+cache_read = "0.075"
+cache_write = "0.15"

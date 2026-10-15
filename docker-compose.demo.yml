@@ -1,0 +1,63 @@
+# QueryGuard packaging demo stack: PostgreSQL 16 + the MCP server image.
+#
+# WHY A SEPARATE FILE (not the repo's docker-compose.yml): the existing
+# docker-compose.yml defines the owner's BIRD development database (service `db`,
+# container `queryguard-mcp-db-1`, the `pgdata` volume with ~955 MB of BIRD data,
+# and the ./data bind mount). scripts/create_reader.py, scripts/_dockerutil.py and
+# eval/dryrun_attacks.py all depend on that service name, container name and port.
+# Overwriting it would break the BIRD + eval + attack workflow, so this packaging
+# demo lives in its own file with its own volume and container names. Run it with
+# an explicit project name so nothing collides with the BIRD stack:
+#   docker compose -p queryguard-demo -f docker-compose.demo.yml up -d
+#
+# All credentials below are DEV-ONLY PLACEHOLDERS for a throwaway demo bound to
+# 127.0.0.1. They are NOT secrets and must never be reused for anything real.
+# Override them from the environment (same variable names as .env.example) if you
+# want different values; nothing here reads your .env.
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      # DEV-ONLY placeholder password — not a secret.
+      POSTGRES_PASSWORD: ${DEMO_POSTGRES_PASSWORD:-queryguard_demo_only}
+      POSTGRES_DB: ${DEMO_DB:-queryguard_demo}
+    ports:
+      # Published on loopback only, on a non-default host port so it cannot clash
+      # with the BIRD stack's DB_PORT.
+      - "127.0.0.1:${DEMO_DB_PORT:-55432}:5432"
+    volumes:
+      - demo_pgdata:/var/lib/postgresql/data
+      # Synthetic demo schema + seed auto-load on first init (pure SQL, no vars).
+      - ./db/demo:/docker-entrypoint-initdb.d:ro
+      # Reuse the EXISTING role + revoke setup, unchanged, for the reader step.
+      - ./scripts/create_reader.sql:/setup/create_reader.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${DEMO_DB:-queryguard_demo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      BIRD_DBS: ${DEMO_DB:-queryguard_demo}
+      READER_USER: ${READER_USER:-qg_reader}
+      # DEV-ONLY placeholder reader password — not a secret.
+      READER_PASSWORD: ${DEMO_READER_PASSWORD:-qg_reader_demo_only}
+      AUDIT_LOG_PATH: /tmp/queryguard_audit.jsonl
+    # Keep-alive; the MCP server is stdio and is launched per connection, e.g.
+    #   docker compose -p queryguard-demo -f docker-compose.demo.yml run --rm -T server python -m queryguard.server
+    command: ["python", "-c", "import time; print('queryguard image ready; stdio entrypoint: python -m queryguard.server'); time.sleep(2147483647)"]
+
+# Named so it does not collide with the BIRD stack's `pgdata` volume.
+volumes:
+  demo_pgdata:

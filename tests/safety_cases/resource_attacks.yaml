@@ -1,0 +1,42 @@
+# Resource attacks: read-only but expensive queries.
+#
+# check_sql is NOT expected to block these — they pass every structural rule.
+# They exist for Phase 3's statement_timeout and EXPLAIN cost warning, and are
+# deliberately NOT exercised in this phase's tests. Each case: {id, sql, why}.
+
+- id: res_huge_generate_series
+  sql: "SELECT count(*) FROM generate_series(1, 1000000000) AS g"
+  why: a billion-row series exhausts time/CPU
+- id: res_double_generate_series_cross_join
+  sql: "SELECT count(*) FROM generate_series(1, 100000) AS g1 CROSS JOIN generate_series(1, 100000) AS g2"
+  why: 10 billion row cross product
+- id: res_cross_join_transactions
+  sql: "SELECT count(*) FROM transactions_1k AS a CROSS JOIN transactions_1k AS b"
+  why: self cross join of a large BIRD table
+- id: res_triple_cross_join_cards
+  sql: "SELECT count(*) FROM cards AS a, cards AS b, cards AS c"
+  why: three-way cartesian product
+- id: res_cross_join_results
+  sql: "SELECT count(*) FROM results AS r1 CROSS JOIN results AS r2 CROSS JOIN results AS r3"
+  why: three-way cartesian product of race results
+- id: res_unbounded_recursive
+  sql: "WITH RECURSIVE r AS (SELECT 1 AS n UNION ALL SELECT n + 1 FROM r) SELECT n FROM r"
+  why: recursion with no stop condition
+- id: res_heavy_sort_cards
+  sql: "SELECT name FROM cards ORDER BY md5(name || COALESCE(text, ''))"
+  why: a hashing sort over every row
+- id: res_order_by_random
+  sql: "SELECT g FROM generate_series(1, 2000000) AS g ORDER BY random()"
+  why: a full sort of two million random keys
+- id: res_catastrophic_regex
+  sql: "SELECT count(*) FROM posts WHERE body ~ '(a+)+b'"
+  why: catastrophic backtracking regex over a text column
+- id: res_distinct_triple_cross_join
+  sql: "SELECT DISTINCT a.element FROM atom AS a CROSS JOIN bond AS b CROSS JOIN connected AS c"
+  why: distinct over a three-way cartesian product
+- id: res_cross_join_players
+  sql: "SELECT count(*) FROM player AS a CROSS JOIN player AS b"
+  why: self cross join of the players table
+- id: res_unbounded_recursion_count
+  sql: "WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM r) SELECT count(*) FROM r"
+  why: the planner badly underestimates recursive CTEs, so the cost gate passes it, and COUNT(*) forces the recursion to run forever — only the timeout can stop it

