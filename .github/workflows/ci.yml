@@ -32,7 +32,8 @@ jobs:
       BIRD_DBS: california_schools,card_games,codebase_community,debit_card_specializing,european_football_2,financial,formula_1,student_club,superhero,thrombosis_prediction,toxicology
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v7
+
         with:
           python-version: "3.12"
       - name: Install dependencies (main + dev + eval groups)
@@ -84,7 +85,8 @@ jobs:
       DEMO_READER_PASSWORD: ci_reader_only
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v7
+
         with:
           python-version: "3.12"
       - name: Install dependencies
